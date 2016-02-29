@@ -54,6 +54,7 @@ public class GetComment extends AsyncTask<Void, Void, Map> {
             while (iterator.hasNext()) {
                 Map.Entry entry = (Map.Entry) iterator.next();
                 mediaId = (String) entry.getKey();
+                Log.i("MediId:", mediaId);
                 List<CommentDetails> commentDetailsList1=new ArrayList<>();
                 String recentComment = AppData.APIURL + "/media/" +mediaId + "/comments?access_token=" + AppData.accesstokn;
                 url = new URL(recentComment);
@@ -70,12 +71,12 @@ public class GetComment extends AsyncTask<Void, Void, Map> {
                     commentDetail.setComment(comment);
                     commentDetail.setCommentedBy(commentFromUser);
                     Log.i("Comment:", comment);
-                    Log.i("CommentFrom", commentFromUser);
+                    /*Log.i("CommentFrom", commentFromUser);*/
                     //commentDetailsList.add(commentDetail);
                     commentDetailsList1.add(commentDetail);
                 }
-                listMap.put(mediaId,commentDetailsList1);
-                Log.i("CommentFrom", "----------------------------------");
+                listMap.put(mediaId, commentDetailsList1);
+                //Log.i("CommentFrom", "----------------------------------");
             }
 
         } catch (MalformedURLException e) {

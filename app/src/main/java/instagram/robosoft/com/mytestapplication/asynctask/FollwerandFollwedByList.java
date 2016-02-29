@@ -12,8 +12,10 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Map;
 
 import instagram.robosoft.com.mytestapplication.constant.AppData;
+import instagram.robosoft.com.mytestapplication.model.MediaDetails;
 import instagram.robosoft.com.mytestapplication.utils.Util;
 
 /**
@@ -22,36 +24,55 @@ import instagram.robosoft.com.mytestapplication.utils.Util;
 public class FollwerandFollwedByList extends AsyncTask<String, Void, Void> {
     private HttpURLConnection mHttpURLConnection = null;
     String MediaId[];
+    private MediaDetails mediaDetails;
 
+    public FollwerandFollwedByList(Map<String, MediaDetails> mediaDetailsMap) {
+        this.mediaDetailsMap = mediaDetailsMap;
+    }
+
+    private Map<String,MediaDetails> mediaDetailsMap;
 
 
     @Override
     protected Void doInBackground(String... params) {
         try {
+
+            //List of Follwers
             URL url = new URL(params[0]);
             mHttpURLConnection = (HttpURLConnection) url.openConnection();
             mHttpURLConnection.setRequestMethod("GET");
             String respose = String.valueOf(Util.covertInputStreamToString(mHttpURLConnection.getInputStream()));
             Log.i("Follws", respose);
-            url = new URL(params[1]);
-            mHttpURLConnection = (HttpURLConnection) url.openConnection();
-            mHttpURLConnection.setRequestMethod("GET");
-            respose = String.valueOf(Util.covertInputStreamToString(mHttpURLConnection.getInputStream()));
-            Log.i("FollwsBy", respose);
-
-            JSONObject jsonObject = (JSONObject) new JSONTokener(respose).nextValue();
-            JSONArray followdByDataArray = jsonObject.getJSONArray("data");
-            MediaId = new String[followdByDataArray.length()];
-            for (int i = 0; i < followdByDataArray.length(); i++) {
-                MediaId[i] = followdByDataArray.getJSONObject(i).getString("id");
+            JSONObject follwesByJson = (JSONObject) new JSONTokener(respose).nextValue();
+            JSONArray follwesByJsonJSONArray = follwesByJson.getJSONArray("data");
+            String follwerId[] = new String[follwesByJsonJSONArray.length()];
+            for (int i = 0; i < follwesByJsonJSONArray.length(); i++) {
+                follwerId[i] = follwesByJsonJSONArray.getJSONObject(i).getString("id");
+                Log.i("ID", follwerId[i]);
             }
-            for (int i = 0; i < MediaId.length; i++) {
-                String media = "https://api.instagram.com/v1/users/" + MediaId[i] + "/media/recent/?access_token=" + AppData.accesstokn;
+            //get media details json data of follower
+            for (int i = 0; i < follwerId.length; i++) {
+                String media = "https://api.instagram.com/v1/users/" + follwerId[i] + "/media/recent/?access_token=" + AppData.accesstokn;
                 url = new URL(media);
                 mHttpURLConnection = (HttpURLConnection) url.openConnection();
                 mHttpURLConnection.setRequestMethod("GET");
                 respose = String.valueOf(Util.covertInputStreamToString(mHttpURLConnection.getInputStream()));
                 Log.i("MediaDetails", respose);
+                //get details of mediaobject
+                JSONObject rootJsonObject = (JSONObject) new JSONTokener(respose).nextValue();
+                JSONArray rootJsonArray = rootJsonObject.getJSONArray("data");
+                for (int j = 0; j < rootJsonArray.length(); j++) {
+                    mediaDetails = new MediaDetails();
+                    JSONObject jsonObject = rootJsonArray.getJSONObject(j);
+                    String imageurl = jsonObject.getJSONObject("images").getJSONObject("standard_resolution").getString("url");
+                    String liked = jsonObject.getJSONObject("likes").getString("count");
+                    String caption = jsonObject.getJSONObject("caption").getString("text");
+                    String totalComment = jsonObject.getJSONObject("comments").getString("count");
+                    String mediaidd = jsonObject.getString("id");
+                    mediaDetailsMap.put(mediaidd, mediaDetails);
+                    Log.i("FollwdBy mediaData", imageurl + "\n " + liked + "\n " + caption + "\n " + totalComment + "\n " + mediaidd);
+                }
+
             }
         } catch (MalformedURLException e) {
             e.printStackTrace();
@@ -61,5 +82,10 @@ public class FollwerandFollwedByList extends AsyncTask<String, Void, Void> {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    protected void onPostExecute(Void aVoid) {
+        super.onPostExecute(aVoid);
     }
 }

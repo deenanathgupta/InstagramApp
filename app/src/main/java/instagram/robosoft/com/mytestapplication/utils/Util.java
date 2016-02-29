@@ -14,7 +14,7 @@ public class Util {
     public static StringBuffer covertInputStreamToString(InputStream inputStream) throws IOException {
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
         String line = "";
-        Log.i("Test", "covertInputStreamToString()");
+       // Log.i("Test", "covertInputStreamToString()");
         StringBuffer data = new StringBuffer();
         try {
             while ((line = bufferedReader.readLine()) != null) {
