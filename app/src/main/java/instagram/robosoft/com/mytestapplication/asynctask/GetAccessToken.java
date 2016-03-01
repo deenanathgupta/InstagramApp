@@ -43,7 +43,7 @@ public class GetAccessToken extends AsyncTask<String, Void, String> {
 
     @Override
     protected String doInBackground(String... params) {
-        Log.i("Test", "Inside doInBackground " + params[0]);
+       // Log.i("Test", "Inside doInBackground " + params[0]);
         SharedPreferences.Editor editor = mSharedpreferences.edit();
         try {
             URL url = new URL(params[0]);
@@ -60,14 +60,14 @@ public class GetAccessToken extends AsyncTask<String, Void, String> {
             outputStreamWriter.flush();
 
             String response = String.valueOf(Util.covertInputStreamToString(httpURLConnection.getInputStream()));
-            Log.i("TestRespo", response);
+           // Log.i("TestRespo", response);
 
             JSONObject jsonObject = (JSONObject) new JSONTokener(response).nextValue();
             accessTokenString = jsonObject.getString("access_token");
             editor.putString(AppData.Name, accessTokenString);
             String id = jsonObject.getJSONObject("user").getString("id");
             username = jsonObject.getJSONObject("user").getString("username");
-            Log.i("IDName", id + "  " + username);
+            //Log.i("IDName", id + "  " + username);
             editor.putString(AppData.accesstoken, accessTokenString);
             editor.commit();
 

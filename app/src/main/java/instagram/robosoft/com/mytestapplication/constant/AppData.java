@@ -24,5 +24,8 @@ public class AppData {
     public static final String Id = "id";
     public static final String accesstoken = "token";
 
+    public static final int POST = 1;
+    public static final int COMMENT = 2;
+
 }
 
