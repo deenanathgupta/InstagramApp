@@ -1,6 +1,7 @@
 package instagram.robosoft.com.mytestapplication.adapter;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -31,20 +32,24 @@ import instagram.robosoft.com.mytestapplication.utils.ImageDownloader;
  * Created by deena on 24/2/16.
  */
 public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapter.ViewHolder> implements ImageAsyncCallBack {
-
+    private SharedPreferences mSharedPreferences;
     private Map<String, MediaDetails> mediaDetailsMap;
     private LruCache<String, Bitmap> lruCache;
     private Context mContext;
+    private String mUserName = null;
     private Iterator mIterator;
-    private ViewGroup viewGroup;
     private List<String> mMediaIdList;
     private List<MediaDetails> mMediaDetailsList;
+    private int commentCount;
 
-    public RecyclerviewAdapter(Map<String, MediaDetails> mediaDetailsMap, Context mContext, ViewGroup mViewGroup) {
+    public RecyclerviewAdapter(Map<String, MediaDetails> mediaDetailsMap, Context mContext, String Username, int commentCount) {
         this.mediaDetailsMap = mediaDetailsMap;
+        this.mUserName = Username;
         this.mContext = mContext;
-        this.viewGroup = mViewGroup;
         mMediaIdList = new ArrayList<>();
+        this.commentCount = commentCount;
+
+        mSharedPreferences = mContext.getSharedPreferences(AppData.SETTINGPREFRENCE, Context.MODE_PRIVATE);
 
         mMediaDetailsList = new ArrayList<>();
         mIterator = mediaDetailsMap.entrySet().iterator();
@@ -63,7 +68,6 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
     public RecyclerviewAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view;
         RecyclerviewAdapter.ViewHolder viewHolder = null;
-        ViewGroup viewGroup;
         view = LayoutInflater.from(mContext).inflate(R.layout.singlerow, parent, false);
         viewHolder = new ViewHolder(view);
 
@@ -80,7 +84,7 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
             new ImageDownloader(holder.postImage, this).execute(mMediaDetailsList.get(position).getMediaUrl());
         }
         holder.viewGroup.removeAllViews();
-        new RequestForCommentAsyncTask(holder.viewGroup, mContext).execute(mMediaDetailsList.get(position).getMediaId());
+        new RequestForCommentAsyncTask(holder.viewGroup, mContext, commentCount).execute(mMediaDetailsList.get(position).getMediaId());
     }
 
     @Override
@@ -112,8 +116,13 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
                 @Override
                 public void onClick(View v) {
                     String comt = editText.getText().toString();
-                    Log.i("MediaId",mMediaIdList.get(getAdapterPosition()));
-                    new PostCommentAsyncTask(comt).execute(" https://api.instagram.com/v1/media/" + mMediaIdList.get(getAdapterPosition()) + "/comments?access_token=" + AppData.accesstokn);
+                    if (comt.trim().length() != 0) {
+                        TextView textViewComment = new TextView(mContext);
+                        textViewComment.append(mUserName + ":-" + comt);
+                        viewGroup.addView(textViewComment);
+                        new PostCommentAsyncTask(comt).execute(AppData.APIURL + "/media/" + mMediaIdList.get(getAdapterPosition()) + "/comments");
+                        editText.setText("");
+                    }
                 }
             });
         }

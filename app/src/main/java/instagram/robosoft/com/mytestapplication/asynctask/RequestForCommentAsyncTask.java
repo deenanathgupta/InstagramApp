@@ -1,6 +1,7 @@
 package instagram.robosoft.com.mytestapplication.asynctask;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.view.View;
@@ -29,11 +30,17 @@ public class RequestForCommentAsyncTask extends AsyncTask<String, CommentDetails
     HttpURLConnection httpURLConnection;
     private Context mContext;
     private ViewGroup childViewGroup;
+    private int commentCount;
+    private int count = 0;
+    private SharedPreferences mSharedPreferences;
 
-    public RequestForCommentAsyncTask(ViewGroup childViewGroup, Context mContext) {
+    public RequestForCommentAsyncTask(ViewGroup childViewGroup, Context mContext, int commentCount) {
         //Log.i("CommentAsyncTask", "DC");
         this.mContext = mContext;
         this.childViewGroup = childViewGroup;
+        this.commentCount = commentCount;
+        mSharedPreferences = mContext.getSharedPreferences(AppData.SETTINGPREFRENCE, Context.MODE_PRIVATE);
+
     }
 
     @Override
@@ -48,7 +55,11 @@ public class RequestForCommentAsyncTask extends AsyncTask<String, CommentDetails
             //Log.i("CommentList", respose);
             JSONObject jsonObject = (JSONObject) new JSONTokener(respose).nextValue();
             JSONArray data = jsonObject.getJSONArray("data");
-            for (int i = 0; i < data.length(); i++) {
+            if (commentCount > data.length())
+                count = data.length();
+            else if (commentCount < data.length())
+                count = commentCount;
+            for (int i = 0; i < count; i++) {
                 commentDetails = new CommentDetails();
                 JSONObject object = data.getJSONObject(i);
                 String comment = object.getString("text");
@@ -71,7 +82,7 @@ public class RequestForCommentAsyncTask extends AsyncTask<String, CommentDetails
     protected void onProgressUpdate(CommentDetails... values) {
         super.onProgressUpdate(values);
         TextView textViewComment = new TextView(mContext);
-        textViewComment.append(values[0].getCommentedBy()+":-"+values[0].getComment());
+        textViewComment.append(values[0].getCommentedBy() + ":-" + values[0].getComment());
         childViewGroup.addView(textViewComment);
 
     }

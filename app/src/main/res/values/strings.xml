@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">My TestApplication</string>
+    <string name="actionsettion">Setting</string>
 </resources>
