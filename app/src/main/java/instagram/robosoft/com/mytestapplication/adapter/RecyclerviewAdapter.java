@@ -32,9 +32,8 @@ import instagram.robosoft.com.mytestapplication.utils.ImageDownloader;
  * Created by deena on 24/2/16.
  */
 public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapter.ViewHolder> implements ImageAsyncCallBack {
-    private SharedPreferences mSharedPreferences;
     private Map<String, MediaDetails> mediaDetailsMap;
-    private LruCache<String, Bitmap> lruCache;
+    private LruCache<String, Bitmap> mLruCache;
     private Context mContext;
     private String mUserName = null;
     private Iterator mIterator;
@@ -48,9 +47,7 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
         this.mContext = mContext;
         mMediaIdList = new ArrayList<>();
         this.commentCount = commentCount;
-
-        mSharedPreferences = mContext.getSharedPreferences(AppData.SETTINGPREFRENCE, Context.MODE_PRIVATE);
-
+        
         mMediaDetailsList = new ArrayList<>();
         mIterator = mediaDetailsMap.entrySet().iterator();
         while (mIterator.hasNext()) {
@@ -60,7 +57,7 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
         }
         final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
         final int cacheSize = maxMemory / 8;
-        lruCache = new LruCache<>(cacheSize);
+        mLruCache = new LruCache<>(cacheSize);
     }
 
 
@@ -77,7 +74,7 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         holder.txtDescrption.setText(mMediaDetailsList.get(position).getPostDescription());
-        Bitmap bitmap = lruCache.get(mMediaDetailsList.get(position).getMediaUrl());
+        Bitmap bitmap = mLruCache.get(mMediaDetailsList.get(position).getMediaUrl());
         if (bitmap != null) {
             holder.postImage.setImageBitmap(bitmap);
         } else {
@@ -95,7 +92,7 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
     @Override
     public void processFinish(Bitmap bitmap, String Url) {
         if (bitmap != null)
-            lruCache.put(Url, bitmap);
+            mLruCache.put(Url, bitmap);
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {

@@ -5,4 +5,5 @@
     <dimen name="activity_horizontal_margin">64dp</dimen>
     <dimen name="postImagePadding">4dp</dimen>
     <dimen name="sendImageMargin">10dp</dimen>
+    <dimen name="recyclerviewtopMargin">57dp</dimen>
 </resources>

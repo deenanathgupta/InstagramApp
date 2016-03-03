@@ -29,7 +29,7 @@ import instagram.robosoft.com.mytestapplication.utils.Util;
 public class RequestForCommentAsyncTask extends AsyncTask<String, CommentDetails, Void> {
     HttpURLConnection httpURLConnection;
     private Context mContext;
-    private ViewGroup childViewGroup;
+    private ViewGroup mChildViewGroup;
     private int commentCount;
     private int count = 0;
     private SharedPreferences mSharedPreferences;
@@ -37,7 +37,7 @@ public class RequestForCommentAsyncTask extends AsyncTask<String, CommentDetails
     public RequestForCommentAsyncTask(ViewGroup childViewGroup, Context mContext, int commentCount) {
         //Log.i("CommentAsyncTask", "DC");
         this.mContext = mContext;
-        this.childViewGroup = childViewGroup;
+        this.mChildViewGroup = childViewGroup;
         this.commentCount = commentCount;
         mSharedPreferences = mContext.getSharedPreferences(AppData.SETTINGPREFRENCE, Context.MODE_PRIVATE);
 
@@ -83,7 +83,7 @@ public class RequestForCommentAsyncTask extends AsyncTask<String, CommentDetails
         super.onProgressUpdate(values);
         TextView textViewComment = new TextView(mContext);
         textViewComment.append(values[0].getCommentedBy() + ":-" + values[0].getComment());
-        childViewGroup.addView(textViewComment);
+        mChildViewGroup.addView(textViewComment);
 
     }
 }
