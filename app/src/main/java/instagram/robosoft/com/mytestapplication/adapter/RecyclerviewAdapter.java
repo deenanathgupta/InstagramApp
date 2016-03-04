@@ -14,6 +14,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.squareup.picasso.Picasso;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -32,24 +34,24 @@ import instagram.robosoft.com.mytestapplication.utils.ImageDownloader;
  * Created by deena on 24/2/16.
  */
 public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapter.ViewHolder> implements ImageAsyncCallBack {
-    private Map<String, MediaDetails> mediaDetailsMap;
+    private Map<String, MediaDetails> mMediaDetailsMap;
     private LruCache<String, Bitmap> mLruCache;
     private Context mContext;
     private String mUserName = null;
     private Iterator mIterator;
     private List<String> mMediaIdList;
     private List<MediaDetails> mMediaDetailsList;
-    private int commentCount;
+    private int mCommentCount;
 
-    public RecyclerviewAdapter(Map<String, MediaDetails> mediaDetailsMap, Context mContext, String Username, int commentCount) {
-        this.mediaDetailsMap = mediaDetailsMap;
+    public RecyclerviewAdapter(Map<String, MediaDetails> mMediaDetailsMap, Context mContext, String Username, int commentCount) {
+        this.mMediaDetailsMap = mMediaDetailsMap;
         this.mUserName = Username;
         this.mContext = mContext;
         mMediaIdList = new ArrayList<>();
-        this.commentCount = commentCount;
-        
+        this.mCommentCount = commentCount;
+
         mMediaDetailsList = new ArrayList<>();
-        mIterator = mediaDetailsMap.entrySet().iterator();
+        mIterator = mMediaDetailsMap.entrySet().iterator();
         while (mIterator.hasNext()) {
             Map.Entry entry = (Map.Entry) mIterator.next();
             mMediaIdList.add((String) entry.getKey());
@@ -73,20 +75,24 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
+        holder.txtTotalComment.setText(mMediaDetailsList.get(position).getTotlaNoOfComment());
+        holder.txtTotalLike.setText(mMediaDetailsList.get(position).getTotalLike());
         holder.txtDescrption.setText(mMediaDetailsList.get(position).getPostDescription());
         Bitmap bitmap = mLruCache.get(mMediaDetailsList.get(position).getMediaUrl());
+        Picasso.with(mContext).load(mMediaDetailsList.get(position).getUserProfilePic()).into(holder.profilePic);
+        holder.txtUserName.setText(mMediaDetailsList.get(position).getUserName());
         if (bitmap != null) {
             holder.postImage.setImageBitmap(bitmap);
         } else {
             new ImageDownloader(holder.postImage, this).execute(mMediaDetailsList.get(position).getMediaUrl());
         }
         holder.viewGroup.removeAllViews();
-        new RequestForCommentAsyncTask(holder.viewGroup, mContext, commentCount).execute(mMediaDetailsList.get(position).getMediaId());
+        new RequestForCommentAsyncTask(holder.viewGroup, mContext, mCommentCount).execute(mMediaDetailsList.get(position).getMediaId());
     }
 
     @Override
     public int getItemCount() {
-        return mediaDetailsMap.size();
+        return mMediaDetailsMap.size();
     }
 
     @Override
@@ -101,6 +107,9 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
         private ViewGroup viewGroup;
         private EditText editText;
         private ImageView sendImage;
+        private TextView txtTotalComment, txtTotalLike;
+        private ImageView profilePic;
+        private TextView txtUserName;
 
         public ViewHolder(View itemView) {
             super(itemView);
@@ -109,6 +118,10 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
             viewGroup = (ViewGroup) itemView.findViewById(R.id.container);
             editText = (EditText) itemView.findViewById(R.id.editText);
             sendImage = (ImageView) itemView.findViewById(R.id.imageView);
+            txtTotalLike = (TextView) itemView.findViewById(R.id.txttotalnooflike);
+            txtTotalComment = (TextView) itemView.findViewById(R.id.txttotalnoofcomment);
+            profilePic = (ImageView) itemView.findViewById(R.id.userimage);
+            txtUserName = (TextView) itemView.findViewById(R.id.txtusername);
             sendImage.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

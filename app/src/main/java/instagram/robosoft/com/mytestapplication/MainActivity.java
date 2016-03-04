@@ -17,8 +17,10 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.webkit.WebView;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
 import java.util.Map;
@@ -34,37 +36,46 @@ import instagram.robosoft.com.mytestapplication.utils.Util;
 public class MainActivity extends AppCompatActivity implements CallBack, MediaDetailsDataCommunicatior, View.OnClickListener {
 
     private RecyclerView mRecyclerView;
-    private SharedPreferences sharedPreferences;
+    private SharedPreferences mSharedPreferences;
     private String mUsername;
-    private Map<String, MediaDetails> mediaDetailsMap;
+    private Map<String, MediaDetails> mMediaDetailsMap;
     private WebView webView;
     private AlertDialog.Builder mAlertBuilder;
     private RecyclerviewAdapter mRecyclerviewAdapter;
     private FloatingActionButton mFab;
-    private CoordinatorLayout coordinatorLayout;
+    private CoordinatorLayout mCoordinatorLayout;
+    private LinearLayout linearLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        linearLayout= (LinearLayout) findViewById(R.id.linlaHeaderProgress);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.htab_toolbar);
         setSupportActionBar(toolbar);
+
         mAlertBuilder = new AlertDialog.Builder(this);
         mAlertBuilder.setTitle("Setting.");
-        webView = (WebView) findViewById(R.id.webview);
-        mRecyclerView = (RecyclerView) findViewById(R.id.recyclerview);
+        mAlertBuilder.setMessage("Enter a value For comment to show");
 
-        sharedPreferences = getSharedPreferences(AppData.SETTINGPREFRENCE, MODE_PRIVATE);
+        webView = (WebView) findViewById(R.id.webview);
         webView.setVerticalScrollBarEnabled(false);
         webView.setHorizontalScrollBarEnabled(false);
+
+        mRecyclerView = (RecyclerView) findViewById(R.id.recyclerview);
+
+        mSharedPreferences = getSharedPreferences(AppData.SETTINGPREFRENCE, MODE_PRIVATE);
 
         mFab = (FloatingActionButton) findViewById(R.id.fab);
         mFab.setOnClickListener(this);
 
-        coordinatorLayout = (CoordinatorLayout) findViewById(R.id
+        mCoordinatorLayout = (CoordinatorLayout) findViewById(R.id
                 .coordinatorlayout);
         if (Util.isNwConnected(this)) {
             giveUrlToWebView();
+            linearLayout.setVisibility(View.GONE);
         } else {
             reloadConnection();
         }
@@ -73,7 +84,7 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     }
 
     private void reloadConnection() {
-        Snackbar.make(coordinatorLayout, "Internet connection is not Available", Snackbar.LENGTH_LONG).setAction("Undo", new View.OnClickListener() {
+        Snackbar.make(mCoordinatorLayout, "Internet connection is not Available", Snackbar.LENGTH_LONG).setAction("Undo", new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (Util.isNwConnected(MainActivity.this))
@@ -93,17 +104,19 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
         getSupportActionBar().setTitle(s);
         this.mUsername = s;
         new MediaDetailsAsyncTask(this).execute(AppData.USER_INFORMATION, AppData.FOLLWERS);
+        linearLayout.setVisibility(View.VISIBLE);
     }
 
     @Override
     public void getMediaDetails(Map<String, MediaDetails> l) {
-        mediaDetailsMap = l;
+        mMediaDetailsMap = l;
         webView.setVisibility(View.GONE);
-        int commentCountDisplay = Integer.parseInt(sharedPreferences.getString(AppData.SettingKey, "5"));
+        int commentCountDisplay = Integer.parseInt(mSharedPreferences.getString(AppData.SettingKey, "5"));
         mRecyclerView.setVisibility(View.VISIBLE);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mRecyclerviewAdapter = new RecyclerviewAdapter(mediaDetailsMap, this, mUsername, commentCountDisplay);
+        mRecyclerviewAdapter = new RecyclerviewAdapter(mMediaDetailsMap, this, mUsername, commentCountDisplay);
         mRecyclerView.setAdapter(mRecyclerviewAdapter);
+        linearLayout.setVisibility(View.GONE);
     }
 
     @Override
@@ -125,20 +138,23 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
                 mAlertBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        String input = editText.getText().toString();
+                        if (input.trim().length() != 0) {
+                            SharedPreferences.Editor editor = mSharedPreferences.edit();
+                            editor.putString(AppData.SettingKey, input);
+                            editor.commit();
 
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.putString(AppData.SettingKey, editText.getText().toString());
-                        editor.commit();
-                        if (editText.getText().toString().trim().length() != 0) {
                             mRecyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
-                            mRecyclerviewAdapter = new RecyclerviewAdapter(mediaDetailsMap, MainActivity.this, mUsername, Integer.parseInt(editText.getText().toString()));
+                            mRecyclerviewAdapter = new RecyclerviewAdapter(mMediaDetailsMap, MainActivity.this, mUsername, Integer.parseInt(editText.getText().toString()));
                             mRecyclerView.setAdapter(mRecyclerviewAdapter);
+                        } else {
+                            Snackbar.make(mCoordinatorLayout, "Please enter valid number", Snackbar.LENGTH_LONG).show();
                         }
                     }
                 }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-
+                        finish();
                     }
                 });
                 AlertDialog alertDialog = mAlertBuilder.create();

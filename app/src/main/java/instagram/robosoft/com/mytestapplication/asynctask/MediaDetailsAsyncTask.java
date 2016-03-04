@@ -3,6 +3,8 @@ package instagram.robosoft.com.mytestapplication.asynctask;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -13,16 +15,12 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import instagram.robosoft.com.mytestapplication.communicator.CallBack;
 import instagram.robosoft.com.mytestapplication.communicator.MediaDetailsDataCommunicatior;
 import instagram.robosoft.com.mytestapplication.constant.AppData;
 import instagram.robosoft.com.mytestapplication.model.MediaDetails;
-import instagram.robosoft.com.mytestapplication.model.PostDetailsOfInstagram;
 import instagram.robosoft.com.mytestapplication.utils.Util;
 
 /**
@@ -39,6 +37,12 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Map<String, M
     public MediaDetailsAsyncTask(Context mContext) {
         this.mContext = mContext;
         mCallBack = (MediaDetailsDataCommunicatior) mContext;
+    }
+
+    @Override
+    protected void onPreExecute() {
+        super.onPreExecute();
+
     }
 
     @Override
@@ -69,6 +73,7 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Map<String, M
                 httpURLConnection = (HttpURLConnection) url.openConnection();
                 httpURLConnection.setRequestMethod("GET");
                 respose = String.valueOf(Util.covertInputStreamToString(httpURLConnection.getInputStream()));
+                Log.i("MediaDetails", respose);
                 //get details of mediaobject
                 JSONObject rootJsonObject = (JSONObject) new JSONTokener(respose).nextValue();
                 JSONArray rootJsonArray = rootJsonObject.getJSONArray("data");
@@ -108,11 +113,16 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Map<String, M
                     totalComment = data.getJSONObject(i).getJSONObject("comments").getString("count");
                     mediaDetails.setTotlaNoOfComment(totalComment);
                 }
+                String profile_picture = jsonObject1.getJSONObject("user").getString("profile_picture");
+                String username = jsonObject1.getJSONObject("user").getString("username");
                 mediaidd = jsonObject1.getString("id");
                 mediaId[i] = mediaidd;
                 mediaDetails.setMediaUrl(imageurl);
                 mediaDetails.setTotalLike(liked);
                 mediaDetails.setMediaId(mediaId[i]);
+                //ChangesHere
+                mediaDetails.setUserProfilePic(profile_picture);
+                mediaDetails.setUserName(username);
 
                 //mediaDetailseslist.add(mediaDetails);
                 mediaDetailsMap.put(mediaidd, mediaDetails);
