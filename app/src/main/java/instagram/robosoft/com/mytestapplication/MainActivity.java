@@ -1,67 +1,172 @@
 package instagram.robosoft.com.mytestapplication;
 
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.support.v7.app.AppCompatActivity;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
+import android.support.v7.widget.Toolbar;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.Window;
 import android.webkit.WebView;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
-import java.util.HashMap;
 import java.util.Map;
 
-import instagram.robosoft.com.mytestapplication.asynctask.FollwerandFollwedByList;
-import instagram.robosoft.com.mytestapplication.asynctask.GetComment;
+import instagram.robosoft.com.mytestapplication.adapter.RecyclerviewAdapter;
 import instagram.robosoft.com.mytestapplication.asynctask.MediaDetailsAsyncTask;
 import instagram.robosoft.com.mytestapplication.communicator.CallBack;
-import instagram.robosoft.com.mytestapplication.communicator.CommentDetailsCallBack;
 import instagram.robosoft.com.mytestapplication.communicator.MediaDetailsDataCommunicatior;
 import instagram.robosoft.com.mytestapplication.constant.AppData;
 import instagram.robosoft.com.mytestapplication.model.MediaDetails;
-import instagram.robosoft.com.mytestapplication.model.PostDetailsOfInstagram;
+import instagram.robosoft.com.mytestapplication.utils.Util;
 
-public class MainActivity extends AppCompatActivity implements CallBack, MediaDetailsDataCommunicatior, CommentDetailsCallBack {
+public class MainActivity extends AppCompatActivity implements CallBack, MediaDetailsDataCommunicatior, View.OnClickListener {
 
     private RecyclerView mRecyclerView;
-    private SharedPreferences sharedPreferences;
-    //private List<MediaDetails> mMediaDetailses;
-    private Map<String, MediaDetails> mediaDetailsMap = new HashMap<>();
-    private Map mCommentDetailsList;
-    private Map<String, PostDetailsOfInstagram> instagramMap;
+    private SharedPreferences mSharedPreferences;
+    private String mUsername;
+    private Map<String, MediaDetails> mMediaDetailsMap;
+    private WebView webView;
+    private AlertDialog.Builder mAlertBuilder;
+    private RecyclerviewAdapter mRecyclerviewAdapter;
+    private FloatingActionButton mFab;
+    private CoordinatorLayout mCoordinatorLayout;
+    private LinearLayout linearLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        instagramMap = new HashMap<>();
-        WebView webView = (WebView) findViewById(R.id.webview);
-        mRecyclerView = (RecyclerView) findViewById(R.id.recyclerview);
-        sharedPreferences = getSharedPreferences(AppData.MYPREFERENCE, MODE_PRIVATE);
+
+        linearLayout= (LinearLayout) findViewById(R.id.linlaHeaderProgress);
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.htab_toolbar);
+        setSupportActionBar(toolbar);
+
+        mAlertBuilder = new AlertDialog.Builder(this);
+        mAlertBuilder.setTitle("Setting.");
+        mAlertBuilder.setMessage("Enter a value For comment to show");
+
+        webView = (WebView) findViewById(R.id.webview);
         webView.setVerticalScrollBarEnabled(false);
         webView.setHorizontalScrollBarEnabled(false);
+
+        mRecyclerView = (RecyclerView) findViewById(R.id.recyclerview);
+
+        mSharedPreferences = getSharedPreferences(AppData.SETTINGPREFRENCE, MODE_PRIVATE);
+
+        mFab = (FloatingActionButton) findViewById(R.id.fab);
+        mFab.setOnClickListener(this);
+
+        mCoordinatorLayout = (CoordinatorLayout) findViewById(R.id
+                .coordinatorlayout);
+        if (Util.isNwConnected(this)) {
+            giveUrlToWebView();
+            linearLayout.setVisibility(View.GONE);
+        } else {
+            reloadConnection();
+        }
+
+
+    }
+
+    private void reloadConnection() {
+        Snackbar.make(mCoordinatorLayout, "Internet connection is not Available", Snackbar.LENGTH_LONG).setAction("Undo", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (Util.isNwConnected(MainActivity.this))
+                    giveUrlToWebView();
+            }
+        }).setActionTextColor(Color.RED).show();
+    }
+
+    private void giveUrlToWebView() {
         webView.setWebViewClient(new WebViewClient(this));
         webView.getSettings().setJavaScriptEnabled(true);
         webView.loadUrl(AppData.authURLString);
-
     }
 
     @Override
     public void getData(String s) {
         getSupportActionBar().setTitle(s);
-        String name = sharedPreferences.getString(AppData.Id, "");
-        Log.i("Name", name);
+        this.mUsername = s;
         new MediaDetailsAsyncTask(this).execute(AppData.USER_INFORMATION, AppData.FOLLWERS);
+        linearLayout.setVisibility(View.VISIBLE);
     }
 
     @Override
     public void getMediaDetails(Map<String, MediaDetails> l) {
-        mediaDetailsMap = l;
-        new GetComment(mediaDetailsMap, this).execute();
+        mMediaDetailsMap = l;
+        webView.setVisibility(View.GONE);
+        int commentCountDisplay = Integer.parseInt(mSharedPreferences.getString(AppData.SettingKey, "5"));
+        mRecyclerView.setVisibility(View.VISIBLE);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mRecyclerviewAdapter = new RecyclerviewAdapter(mMediaDetailsMap, this, mUsername, commentCountDisplay);
+        mRecyclerView.setAdapter(mRecyclerviewAdapter);
+        linearLayout.setVisibility(View.GONE);
     }
 
     @Override
-    public void commentDetails(Map commentDetailses) {
-        mCommentDetailsList = commentDetailses;
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.action_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+
+            case R.id.setting:
+                View v = LayoutInflater.from(this).inflate(R.layout.inputdialog, null);
+                mAlertBuilder.setView(v);
+                mAlertBuilder.setIcon(R.drawable.ic_settings_black_24dp);
+                final EditText editText = (EditText) v.findViewById(R.id.editText2);
+                mAlertBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String input = editText.getText().toString();
+                        if (input.trim().length() != 0) {
+                            SharedPreferences.Editor editor = mSharedPreferences.edit();
+                            editor.putString(AppData.SettingKey, input);
+                            editor.commit();
+
+                            mRecyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+                            mRecyclerviewAdapter = new RecyclerviewAdapter(mMediaDetailsMap, MainActivity.this, mUsername, Integer.parseInt(editText.getText().toString()));
+                            mRecyclerView.setAdapter(mRecyclerviewAdapter);
+                        } else {
+                            Snackbar.make(mCoordinatorLayout, "Please enter valid number", Snackbar.LENGTH_LONG).show();
+                        }
+                    }
+                }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                });
+                AlertDialog alertDialog = mAlertBuilder.create();
+                alertDialog.show();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onClick(View v) {
+        reloadConnection();
     }
 }
 

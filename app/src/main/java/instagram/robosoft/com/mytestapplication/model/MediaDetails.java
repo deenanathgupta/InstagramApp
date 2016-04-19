@@ -7,8 +7,26 @@ public class MediaDetails {
     private String mediaUrl;
     private String postDescription;
     private String mediaId;
-    public String totalLike;
-    public String totlaNoOfComment;
+    private String totalLike;
+    private String totlaNoOfComment;
+    private String userProfilePic;
+    private String userName;
+
+    public String getUserProfilePic() {
+        return userProfilePic;
+    }
+
+    public void setUserProfilePic(String userProfilePic) {
+        this.userProfilePic = userProfilePic;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
 
     public String getTotlaNoOfComment() {
         return totlaNoOfComment;
