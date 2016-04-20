@@ -2,4 +2,5 @@
 <resources>
     <string name="actionsettion">Setting</string>
     <string name="totalLike">Like:</string>
+    <string name="userprifle">Profile</string>
 </resources>

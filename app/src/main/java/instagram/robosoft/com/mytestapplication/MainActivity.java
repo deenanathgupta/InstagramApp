@@ -1,28 +1,37 @@
 package instagram.robosoft.com.mytestapplication;
 
+import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
+import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 import instagram.robosoft.com.mytestapplication.adapter.RecyclerviewAdapter;
@@ -38,20 +47,21 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     private RecyclerView mRecyclerView;
     private SharedPreferences mSharedPreferences;
     private String mUsername;
-    private Map<String, MediaDetails> mMediaDetailsMap;
     private WebView webView;
     private AlertDialog.Builder mAlertBuilder;
     private RecyclerviewAdapter mRecyclerviewAdapter;
     private FloatingActionButton mFab;
     private CoordinatorLayout mCoordinatorLayout;
     private LinearLayout linearLayout;
+    private int commentCountDisplay = 0;
+    private ArrayList<MediaDetails> mediaDetailseslist;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        linearLayout= (LinearLayout) findViewById(R.id.linlaHeaderProgress);
+        linearLayout = (LinearLayout) findViewById(R.id.linlaHeaderProgress);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.htab_toolbar);
         setSupportActionBar(toolbar);
@@ -73,18 +83,23 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
 
         mCoordinatorLayout = (CoordinatorLayout) findViewById(R.id
                 .coordinatorlayout);
-        if (Util.isNwConnected(this)) {
-            giveUrlToWebView();
-            linearLayout.setVisibility(View.GONE);
-        } else {
-            reloadConnection();
+        if (savedInstanceState == null) {
+            if (Util.isNwConnected(this)) {
+                giveUrlToWebView();
+                linearLayout.setVisibility(View.GONE);
+            } else {
+                reloadConnection();
+            }
         }
-
-
+        if (!Util.isNwConnected(this)) {
+            mFab.show();
+        } else {
+            mFab.hide();
+        }
     }
 
     private void reloadConnection() {
-        Snackbar.make(mCoordinatorLayout, "Internet connection is not Available", Snackbar.LENGTH_LONG).setAction("Undo", new View.OnClickListener() {
+        Snackbar.make(mCoordinatorLayout, "Internet connection is not Available", Snackbar.LENGTH_LONG).setAction("ReTry", new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (Util.isNwConnected(MainActivity.this))
@@ -100,6 +115,22 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     }
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList("Data", mediaDetailseslist);
+    }
+
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        mediaDetailseslist = savedInstanceState.getParcelableArrayList("Data");
+        passDataToAdapter();
+
+    }
+
+
+    @Override
     public void getData(String s) {
         getSupportActionBar().setTitle(s);
         this.mUsername = s;
@@ -108,13 +139,17 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     }
 
     @Override
-    public void getMediaDetails(Map<String, MediaDetails> l) {
-        mMediaDetailsMap = l;
+    public void getMediaDetails(ArrayList<MediaDetails> l) {
+        mediaDetailseslist = l;
+        passDataToAdapter();
+    }
+
+    private void passDataToAdapter() {
         webView.setVisibility(View.GONE);
-        int commentCountDisplay = Integer.parseInt(mSharedPreferences.getString(AppData.SettingKey, "5"));
+        commentCountDisplay = Integer.parseInt(mSharedPreferences.getString(AppData.SettingKey, "5"));
         mRecyclerView.setVisibility(View.VISIBLE);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mRecyclerviewAdapter = new RecyclerviewAdapter(mMediaDetailsMap, this, mUsername, commentCountDisplay);
+        mRecyclerviewAdapter = new RecyclerviewAdapter(mediaDetailseslist, this, mUsername, commentCountDisplay);
         mRecyclerView.setAdapter(mRecyclerviewAdapter);
         linearLayout.setVisibility(View.GONE);
     }
@@ -129,32 +164,41 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.profile:
 
+                break;
             case R.id.setting:
                 View v = LayoutInflater.from(this).inflate(R.layout.inputdialog, null);
                 mAlertBuilder.setView(v);
                 mAlertBuilder.setIcon(R.drawable.ic_settings_black_24dp);
                 final EditText editText = (EditText) v.findViewById(R.id.editText2);
+                commentCountDisplay = Integer.parseInt(mSharedPreferences.getString(AppData.SettingKey, "5"));
+                if (commentCountDisplay != 0) {
+                    editText.setText(commentCountDisplay + "");
+                }
                 mAlertBuilder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         String input = editText.getText().toString();
+                        SharedPreferences.Editor editor = mSharedPreferences.edit();
+
                         if (input.trim().length() != 0) {
-                            SharedPreferences.Editor editor = mSharedPreferences.edit();
                             editor.putString(AppData.SettingKey, input);
                             editor.commit();
 
                             mRecyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
-                            mRecyclerviewAdapter = new RecyclerviewAdapter(mMediaDetailsMap, MainActivity.this, mUsername, Integer.parseInt(editText.getText().toString()));
+                            mRecyclerviewAdapter = new RecyclerviewAdapter(mediaDetailseslist, MainActivity.this, mUsername, Integer.parseInt(editText.getText().toString()));
                             mRecyclerView.setAdapter(mRecyclerviewAdapter);
                         } else {
                             Snackbar.make(mCoordinatorLayout, "Please enter valid number", Snackbar.LENGTH_LONG).show();
                         }
+
+
                     }
                 }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        finish();
+
                     }
                 });
                 AlertDialog alertDialog = mAlertBuilder.create();

@@ -2,6 +2,7 @@ package instagram.robosoft.com.mytestapplication.asynctask;
 
 import android.content.Context;
 import android.os.AsyncTask;
+import android.text.format.Time;
 import android.util.Log;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -15,7 +16,12 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import instagram.robosoft.com.mytestapplication.communicator.MediaDetailsDataCommunicatior;
@@ -26,17 +32,18 @@ import instagram.robosoft.com.mytestapplication.utils.Util;
 /**
  * Created by deena on 25/2/16.
  */
-public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Map<String, MediaDetails>> {
-    HttpURLConnection httpURLConnection = null;
-    String mediaId[];
-    private Map<String, MediaDetails> mediaDetailsMap = new HashMap<>();
-    MediaDetails mediaDetails;
+public class MediaDetailsAsyncTask extends AsyncTask<String, Void, ArrayList<MediaDetails>> {
+    private HttpURLConnection httpURLConnection = null;
+    private String mediaId[];
+    private MediaDetails mediaDetails;
     private Context mContext;
+    private ArrayList<MediaDetails> mediaDetailseslist;
     private MediaDetailsDataCommunicatior mCallBack;
 
     public MediaDetailsAsyncTask(Context mContext) {
         this.mContext = mContext;
         mCallBack = (MediaDetailsDataCommunicatior) mContext;
+        mediaDetailseslist = new ArrayList<>();
     }
 
     @Override
@@ -46,7 +53,7 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Map<String, M
     }
 
     @Override
-    protected Map doInBackground(String... params) {
+    protected ArrayList<MediaDetails> doInBackground(String... params) {
         try {
             URL url = new URL(params[0]);
             httpURLConnection = (HttpURLConnection) url.openConnection();
@@ -91,7 +98,7 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Map<String, M
                 httpURLConnection.disconnect();
         }
 
-        return mediaDetailsMap;
+        return mediaDetailseslist;
     }
 
     private void convertStringIntoJavaObject(JSONArray data, Boolean flag) {
@@ -102,6 +109,16 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Map<String, M
             try {
                 jsonObject1 = data.getJSONObject(i);
 
+                //Log.i("Test", jsonObject1.toString());
+
+                String createdTime = jsonObject1.getString("created_time");
+                long foo = Long.parseLong(createdTime) * 1000;
+                Date date = new Date(foo);
+                DateFormat formatter = new SimpleDateFormat("MMMM dd,yyyy");
+                Log.i("Test", formatter.format(date));
+
+
+                mediaDetails.setCraetedTime(formatter.format(date));
                 String imageurl = jsonObject1.getJSONObject("images").getJSONObject("standard_resolution").getString("url");
                 String liked = jsonObject1.getJSONObject("likes").getString("count");
                 String caption = null, totalComment = null, mediaidd = null;
@@ -124,8 +141,7 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Map<String, M
                 mediaDetails.setUserProfilePic(profile_picture);
                 mediaDetails.setUserName(username);
 
-                //mediaDetailseslist.add(mediaDetails);
-                mediaDetailsMap.put(mediaidd, mediaDetails);
+                mediaDetailseslist.add(mediaDetails);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -133,7 +149,7 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Map<String, M
     }
 
     @Override
-    protected void onPostExecute(Map<String, MediaDetails> mediaDetailses) {
+    protected void onPostExecute(ArrayList<MediaDetails> mediaDetailses) {
         mCallBack.getMediaDetails(mediaDetailses);
     }
 }

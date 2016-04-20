@@ -35,7 +35,7 @@ public class Util {
         ConnectivityManager connectivityManager =
                 (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo nwInfo = connectivityManager.getActiveNetworkInfo();
-        if (nwInfo != null && nwInfo.isConnectedOrConnecting()) {
+        if (nwInfo != null && nwInfo.isAvailable()) {
             Log.i("Deena", "Inside Utiltity");
             return true;
         }

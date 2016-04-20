@@ -1,9 +1,12 @@
 package instagram.robosoft.com.mytestapplication.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Created by deena on 26/2/16.
  */
-public class MediaDetails {
+public class MediaDetails implements Parcelable{
     private String mediaUrl;
     private String postDescription;
     private String mediaId;
@@ -11,6 +14,41 @@ public class MediaDetails {
     private String totlaNoOfComment;
     private String userProfilePic;
     private String userName;
+    private String createdTime;
+
+    public MediaDetails(Parcel in) {
+        mediaUrl = in.readString();
+        postDescription = in.readString();
+        mediaId = in.readString();
+        totalLike = in.readString();
+        totlaNoOfComment = in.readString();
+        userProfilePic = in.readString();
+        userName = in.readString();
+        createdTime=in.readString();
+    }
+
+    public MediaDetails() {
+    }
+
+    public static final Creator<MediaDetails> CREATOR = new Creator<MediaDetails>() {
+        @Override
+        public MediaDetails createFromParcel(Parcel in) {
+            return new MediaDetails(in);
+        }
+
+        @Override
+        public MediaDetails[] newArray(int size) {
+            return new MediaDetails[size];
+        }
+    };
+
+    public String getCraetedTime() {
+        return createdTime;
+    }
+
+    public void setCraetedTime(String createdTime) {
+        this.createdTime = createdTime;
+    }
 
     public String getUserProfilePic() {
         return userProfilePic;
@@ -66,5 +104,22 @@ public class MediaDetails {
 
     public void setTotalLike(String totalLike) {
         this.totalLike = totalLike;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(mediaUrl);
+        dest.writeString(postDescription);
+        dest.writeString(mediaId);
+        dest.writeString(totalLike);
+        dest.writeString(totlaNoOfComment);
+        dest.writeString(userProfilePic);
+        dest.writeString(userName);
+        dest.writeString(createdTime);
     }
 }

@@ -34,29 +34,19 @@ import instagram.robosoft.com.mytestapplication.utils.ImageDownloader;
  * Created by deena on 24/2/16.
  */
 public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapter.ViewHolder> implements ImageAsyncCallBack {
-    private Map<String, MediaDetails> mMediaDetailsMap;
     private LruCache<String, Bitmap> mLruCache;
     private Context mContext;
     private String mUserName = null;
-    private Iterator mIterator;
-    private List<String> mMediaIdList;
-    private List<MediaDetails> mMediaDetailsList;
     private int mCommentCount;
 
-    public RecyclerviewAdapter(Map<String, MediaDetails> mMediaDetailsMap, Context mContext, String Username, int commentCount) {
-        this.mMediaDetailsMap = mMediaDetailsMap;
+    private ArrayList<MediaDetails> mediaDetailseslist;
+
+    public RecyclerviewAdapter(ArrayList<MediaDetails> mMediaDetailsMap, Context mContext, String Username, int commentCount) {
+        this.mediaDetailseslist = mMediaDetailsMap;
         this.mUserName = Username;
         this.mContext = mContext;
-        mMediaIdList = new ArrayList<>();
         this.mCommentCount = commentCount;
 
-        mMediaDetailsList = new ArrayList<>();
-        mIterator = mMediaDetailsMap.entrySet().iterator();
-        while (mIterator.hasNext()) {
-            Map.Entry entry = (Map.Entry) mIterator.next();
-            mMediaIdList.add((String) entry.getKey());
-            mMediaDetailsList.add((MediaDetails) entry.getValue());
-        }
         final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
         final int cacheSize = maxMemory / 8;
         mLruCache = new LruCache<>(cacheSize);
@@ -75,30 +65,42 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        holder.txtTotalComment.setText(mMediaDetailsList.get(position).getTotlaNoOfComment());
-        holder.txtTotalLike.setText(mMediaDetailsList.get(position).getTotalLike());
-        holder.txtDescrption.setText(mMediaDetailsList.get(position).getPostDescription());
-        Bitmap bitmap = mLruCache.get(mMediaDetailsList.get(position).getMediaUrl());
-        Picasso.with(mContext).load(mMediaDetailsList.get(position).getUserProfilePic()).into(holder.profilePic);
-        holder.txtUserName.setText(mMediaDetailsList.get(position).getUserName());
+        MediaDetails mediaDetails = mediaDetailseslist.get(position);
+        holder.txtTotalComment.setText(mediaDetails.getTotlaNoOfComment());
+        holder.txtTotalLike.setText(mediaDetails.getTotalLike());
+        holder.txtDescrption.setText(mediaDetails.getPostDescription());
+        Bitmap bitmap = mLruCache.get(mediaDetails.getMediaUrl());
+        Picasso.with(mContext).load(mediaDetails.getUserProfilePic()).into(holder.profilePic);
+        holder.txtUserName.setText(mediaDetails.getUserName());
+        holder.txtPostDate.setText(mediaDetails.getCraetedTime().substring(0, mediaDetails.getCraetedTime().indexOf(",")));
         if (bitmap != null) {
             holder.postImage.setImageBitmap(bitmap);
         } else {
-            new ImageDownloader(holder.postImage, this).execute(mMediaDetailsList.get(position).getMediaUrl());
+            new ImageDownloader(holder.postImage, this).execute(mediaDetails.getMediaUrl());
         }
         holder.viewGroup.removeAllViews();
-        new RequestForCommentAsyncTask(holder.viewGroup, mContext, mCommentCount).execute(mMediaDetailsList.get(position).getMediaId());
+        new RequestForCommentAsyncTask(holder.viewGroup, mContext, mCommentCount).execute(mediaDetails.getMediaId());
     }
 
     @Override
     public int getItemCount() {
-        return mMediaDetailsMap.size();
+        return mediaDetailseslist.size();
     }
 
     @Override
     public void processFinish(Bitmap bitmap, String Url) {
         if (bitmap != null)
             mLruCache.put(Url, bitmap);
+    }
+
+    public void clear() {
+        mediaDetailseslist.clear();
+        notifyDataSetChanged();
+    }
+
+    public void addAll(ArrayList<MediaDetails> list) {
+        mediaDetailseslist.addAll(list);
+        notifyDataSetChanged();
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
@@ -109,6 +111,7 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
         private ImageView sendImage;
         private TextView txtTotalComment, txtTotalLike;
         private ImageView profilePic;
+        private TextView txtPostDate;
         private TextView txtUserName;
 
         public ViewHolder(View itemView) {
@@ -122,6 +125,7 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
             txtTotalComment = (TextView) itemView.findViewById(R.id.txttotalnoofcomment);
             profilePic = (ImageView) itemView.findViewById(R.id.userimage);
             txtUserName = (TextView) itemView.findViewById(R.id.txtusername);
+            txtPostDate = (TextView) itemView.findViewById(R.id.postdate);
             sendImage.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -130,11 +134,12 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
                         TextView textViewComment = new TextView(mContext);
                         textViewComment.append(mUserName + ":-" + comt);
                         viewGroup.addView(textViewComment);
-                        new PostCommentAsyncTask(comt).execute(AppData.APIURL + "/media/" + mMediaIdList.get(getAdapterPosition()) + "/comments");
+                        new PostCommentAsyncTask(comt).execute(AppData.APIURL + "/media/" + mediaDetailseslist.get(getAdapterPosition()).getMediaId() + "/comments");
                         editText.setText("");
                     }
                 }
             });
         }
     }
+
 }

@@ -5,4 +5,5 @@ package instagram.robosoft.com.mytestapplication.communicator;
  */
 public interface CallBack {
     public void getData(String s);
+
 }

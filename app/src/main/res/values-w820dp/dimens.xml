@@ -6,4 +6,8 @@
     <dimen name="postImagePadding">4dp</dimen>
     <dimen name="sendImageMargin">10dp</dimen>
     <dimen name="recyclerviewtopMargin">57dp</dimen>
+    <dimen name="circularimage">40dp</dimen>
+    <dimen name="circularimagepaddingleft">20dp</dimen>
+    <dimen name="margin">4dp</dimen>
+    <dimen name="circularimagemarginstart">29dp</dimen>
 </resources>

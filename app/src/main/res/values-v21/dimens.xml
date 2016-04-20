@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="circularimage">40dp</dimen>
+    <dimen name="circularimagepaddingleft">20dp</dimen>
+    <dimen name="margin">4dp</dimen>
+    <dimen name="circularimagemarginstart">29dp</dimen>
+</resources>

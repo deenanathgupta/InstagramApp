@@ -60,7 +60,6 @@ public class GetAccessToken extends AsyncTask<String, Void, String> {
             outputStreamWriter.flush();
 
             String response = String.valueOf(Util.covertInputStreamToString(httpURLConnection.getInputStream()));
-           // Log.i("TestRespo", response);
 
             JSONObject jsonObject = (JSONObject) new JSONTokener(response).nextValue();
             accessTokenString = jsonObject.getString("access_token");
