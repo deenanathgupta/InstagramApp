@@ -2,4 +2,7 @@
 <resources>
     <string name="totalLike">Like:</string>
     <string name="userprifle">Profile</string>
+    <string name="following">Following</string>
+    <string name="posts">Posts</string>
+    <string name="follwers">Follwers</string>
 </resources>

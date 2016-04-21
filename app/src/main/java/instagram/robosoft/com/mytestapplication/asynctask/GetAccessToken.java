@@ -27,10 +27,12 @@ import instagram.robosoft.com.mytestapplication.utils.Util;
 /**
  * Created by deena on 24/2/16.
  */
-public class GetAccessToken extends AsyncTask<String, Void, String> {
+public class GetAccessToken extends AsyncTask<String, Void, String[]> {
     private String accessTokenString;
     private String token = null;
     private String username = null;
+    private String userDetails[] = new String[2];
+    private String mUserprofilePic = null;
     private CallBack mCallBack;
     private SharedPreferences mSharedpreferences;
 
@@ -42,8 +44,8 @@ public class GetAccessToken extends AsyncTask<String, Void, String> {
     }
 
     @Override
-    protected String doInBackground(String... params) {
-       // Log.i("Test", "Inside doInBackground " + params[0]);
+    protected String[] doInBackground(String... params) {
+        // Log.i("Test", "Inside doInBackground " + params[0]);
         SharedPreferences.Editor editor = mSharedpreferences.edit();
         try {
             URL url = new URL(params[0]);
@@ -60,15 +62,20 @@ public class GetAccessToken extends AsyncTask<String, Void, String> {
             outputStreamWriter.flush();
 
             String response = String.valueOf(Util.covertInputStreamToString(httpURLConnection.getInputStream()));
-
+            Log.i("test", "Access Token:" + response);
             JSONObject jsonObject = (JSONObject) new JSONTokener(response).nextValue();
             accessTokenString = jsonObject.getString("access_token");
             editor.putString(AppData.Name, accessTokenString);
             String id = jsonObject.getJSONObject("user").getString("id");
             username = jsonObject.getJSONObject("user").getString("username");
-            //Log.i("IDName", id + "  " + username);
+            mUserprofilePic = jsonObject.getJSONObject("user").getString("profile_picture");
+            userDetails[0] = username;
+            userDetails[1] = mUserprofilePic;
+
+
+            Log.i("IDName", "ProfilePic  " + mUserprofilePic);
             editor.putString(AppData.accesstoken, accessTokenString);
-            editor.commit();
+            editor.apply();
 
         } catch (MalformedURLException e) {
             e.printStackTrace();
@@ -77,13 +84,12 @@ public class GetAccessToken extends AsyncTask<String, Void, String> {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        return username;
+        return userDetails;
     }
 
     @Override
-    protected void onPostExecute(String data) {
+    protected void onPostExecute(String data[]) {
         mCallBack.getData(data);
     }
-
 
 }

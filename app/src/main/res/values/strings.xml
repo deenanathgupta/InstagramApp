@@ -1,7 +1,10 @@
 <resources>
-    <string name="app_name">My TestApplication</string>
+    <string name="app_name">Instagram</string>
     <string name="actionsettion">Setting</string>
     <string name="title_activity_main2">Main2Activity</string>
     <string name="totalLike">Like:</string>
     <string name="userprifle">Profile</string>
+    <string name="following">Following</string>
+    <string name="posts">Posts</string>
+    <string name="follwers">Follwers</string>
 </resources>

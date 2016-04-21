@@ -26,7 +26,7 @@ public class ImageDownloader extends AsyncTask<String, Void, Bitmap> {
 
     public ImageDownloader(ImageView imageView,ImageAsyncCallBack context) {
         this.mImageView = imageView;
-        mImageAsyncCallBack= (ImageAsyncCallBack) context;
+        mImageAsyncCallBack= context;
     }
 
     @Override

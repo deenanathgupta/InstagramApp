@@ -11,4 +11,7 @@
     <dimen name="margin">4dp</dimen>
     <dimen name="circularimagemarginstart">29dp</dimen>
     <dimen name="topPaddingOfTextInputLayoutComment">4dp</dimen>
+    <dimen name="userprofileImage">200dp</dimen>
+    <dimen name="userprofileImageland">120dp</dimen>
+    <dimen name="textpadding">4dp</dimen>
 </resources>

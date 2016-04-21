@@ -3,6 +3,7 @@ package instagram.robosoft.com.mytestapplication.adapter;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.support.design.widget.Snackbar;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.util.LruCache;
@@ -29,6 +30,7 @@ import instagram.robosoft.com.mytestapplication.communicator.ImageAsyncCallBack;
 import instagram.robosoft.com.mytestapplication.constant.AppData;
 import instagram.robosoft.com.mytestapplication.model.MediaDetails;
 import instagram.robosoft.com.mytestapplication.utils.ImageDownloader;
+import instagram.robosoft.com.mytestapplication.utils.Util;
 
 /**
  * Created by deena on 24/2/16.
@@ -38,7 +40,7 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
     private Context mContext;
     private String mUserName = null;
     private int mCommentCount;
-
+    private View mView;
     private ArrayList<MediaDetails> mediaDetailseslist;
 
     public RecyclerviewAdapter(ArrayList<MediaDetails> mMediaDetailsMap, Context mContext, String Username, int commentCount) {
@@ -56,7 +58,7 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
     @Override
     public RecyclerviewAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view;
-        RecyclerviewAdapter.ViewHolder viewHolder = null;
+        RecyclerviewAdapter.ViewHolder viewHolder;
         view = LayoutInflater.from(mContext).inflate(R.layout.singlerow, parent, false);
         viewHolder = new ViewHolder(view);
 
@@ -93,16 +95,6 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
             mLruCache.put(Url, bitmap);
     }
 
-    public void clear() {
-        mediaDetailseslist.clear();
-        notifyDataSetChanged();
-    }
-
-    public void addAll(ArrayList<MediaDetails> list) {
-        mediaDetailseslist.addAll(list);
-        notifyDataSetChanged();
-    }
-
     class ViewHolder extends RecyclerView.ViewHolder {
         private ImageView postImage;
         private TextView txtDescrption;
@@ -130,6 +122,7 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
                 @Override
                 public void onClick(View v) {
                     String comt = editText.getText().toString();
+                    Log.i("test", "UserName : " + mUserName);
                     if (comt.trim().length() != 0) {
                         TextView textViewComment = new TextView(mContext);
                         textViewComment.append(mUserName + ":-" + comt);

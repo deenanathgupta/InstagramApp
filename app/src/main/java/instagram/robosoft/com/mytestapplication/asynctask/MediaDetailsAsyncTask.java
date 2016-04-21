@@ -39,6 +39,8 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, ArrayList<Med
     private Context mContext;
     private ArrayList<MediaDetails> mediaDetailseslist;
     private MediaDetailsDataCommunicatior mCallBack;
+    private int mTotalNoOfFollowers;
+
 
     public MediaDetailsAsyncTask(Context mContext) {
         this.mContext = mContext;
@@ -73,6 +75,9 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, ArrayList<Med
             for (int i = 0; i < follwesByJsonJSONArray.length(); i++) {
                 follwerId[i] = follwesByJsonJSONArray.getJSONObject(i).getString("id");
             }
+            mTotalNoOfFollowers = follwerId.length;
+            Log.i("Test", "Total No OF followers: " + mTotalNoOfFollowers);
+
             //get media details json data of follower
             for (int i = 0; i < follwerId.length; i++) {
                 String media = "https://api.instagram.com/v1/users/" + follwerId[i] + "/media/recent/?access_token=" + AppData.accesstokn;
@@ -105,23 +110,21 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, ArrayList<Med
         mediaId = new String[data.length()];
         for (int i = 0; i < data.length(); i++) {
             mediaDetails = new MediaDetails();
-            JSONObject jsonObject1 = null;
+            JSONObject jsonObject1;
             try {
                 jsonObject1 = data.getJSONObject(i);
 
                 //Log.i("Test", jsonObject1.toString());
-
+                //get the media post date
                 String createdTime = jsonObject1.getString("created_time");
                 long foo = Long.parseLong(createdTime) * 1000;
                 Date date = new Date(foo);
                 DateFormat formatter = new SimpleDateFormat("MMMM dd,yyyy");
-                Log.i("Test", formatter.format(date));
-
 
                 mediaDetails.setCraetedTime(formatter.format(date));
                 String imageurl = jsonObject1.getJSONObject("images").getJSONObject("standard_resolution").getString("url");
                 String liked = jsonObject1.getJSONObject("likes").getString("count");
-                String caption = null, totalComment = null, mediaidd = null;
+                String caption, totalComment, mediaidd;
                 if (!jsonObject1.isNull("caption")) {
                     caption = jsonObject1.getJSONObject("caption").getString("text");
                     mediaDetails.setPostDescription(caption);

@@ -20,12 +20,15 @@ public class AppData {
     public static final String FOLLWERS = "https://api.instagram.com/v1/users/self/follows?access_token=" + AppData.accesstokn;
 
     public static final String MYPREFERENCE = "Data";
-    public static final String SETTINGPREFRENCE="SettingData";
+    public static final String SETTINGPREFRENCE = "SettingData";
     public static final String Name = "name";
     public static final String Id = "id";
     public static final String accesstoken = "token";
 
     public static final String SettingKey = "SettingKey";
+
+    public static final String USERDETAILS = "userDetails";
+    public static final String USER_COMMENT_DETAILS="data";
 
 }
 
