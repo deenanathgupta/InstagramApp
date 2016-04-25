@@ -6,4 +6,8 @@
     <string name="following">Following</string>
     <string name="posts">Posts</string>
     <string name="follwers">Follwers</string>
+    <string name="snackBarMessage">Internet connection is not Available</string>
+    <string name="setting">Setting.</string>
+    <string name="alertMessage">Enter a value For comment to show</string>
+    <string name="snackBarMessageForEditText">Please enter valid number</string>
 </resources>

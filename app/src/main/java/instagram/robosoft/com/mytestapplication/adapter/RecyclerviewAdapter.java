@@ -17,6 +17,15 @@ import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -28,6 +37,7 @@ import instagram.robosoft.com.mytestapplication.asynctask.PostCommentAsyncTask;
 import instagram.robosoft.com.mytestapplication.asynctask.RequestForCommentAsyncTask;
 import instagram.robosoft.com.mytestapplication.communicator.ImageAsyncCallBack;
 import instagram.robosoft.com.mytestapplication.constant.AppData;
+import instagram.robosoft.com.mytestapplication.model.CommentDetails;
 import instagram.robosoft.com.mytestapplication.model.MediaDetails;
 import instagram.robosoft.com.mytestapplication.utils.ImageDownloader;
 import instagram.robosoft.com.mytestapplication.utils.Util;
@@ -41,6 +51,7 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
     private String mUserName = null;
     private int mCommentCount;
     private View mView;
+    HttpURLConnection httpURLConnection;
     private ArrayList<MediaDetails> mediaDetailseslist;
 
     public RecyclerviewAdapter(ArrayList<MediaDetails> mMediaDetailsMap, Context mContext, String Username, int commentCount) {
@@ -74,7 +85,8 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
         Bitmap bitmap = mLruCache.get(mediaDetails.getMediaUrl());
         Picasso.with(mContext).load(mediaDetails.getUserProfilePic()).into(holder.profilePic);
         holder.txtUserName.setText(mediaDetails.getUserName());
-        holder.txtPostDate.setText(mediaDetails.getCraetedTime().substring(0, mediaDetails.getCraetedTime().indexOf(",")));
+         //holder.txtPostDate.setText(mediaDetails.getCraetedTime().substring(0, mediaDetails.getCraetedTime().indexOf(",")));
+        holder.txtPostDate.setText(mediaDetails.getDateDiff() + "");
         if (bitmap != null) {
             holder.postImage.setImageBitmap(bitmap);
         } else {
@@ -82,6 +94,14 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
         }
         holder.viewGroup.removeAllViews();
         new RequestForCommentAsyncTask(holder.viewGroup, mContext, mCommentCount).execute(mediaDetails.getMediaId());
+
+/*        ArrayList<CommentDetails> commentDetailsArrayList = mediaDetails.getCommentDetailsArrayList();
+        //Log.i("test", commentDetailsArrayList.size() + "");
+        for (CommentDetails commentDetails : commentDetailsArrayList) {
+            TextView textViewComment = new TextView(mContext);
+            textViewComment.append(commentDetails.getCommentedBy() + ":-" + commentDetails.getComment());
+            holder.viewGroup.addView(textViewComment);
+        }*/
     }
 
     @Override
@@ -123,7 +143,7 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
                 public void onClick(View v) {
                     String comt = editText.getText().toString();
                     Log.i("test", "UserName : " + mUserName);
-                    if (comt.trim().length() != 0) {
+                    if (comt.trim().length() != 0 && Util.isNwConnected(mContext)) {
                         TextView textViewComment = new TextView(mContext);
                         textViewComment.append(mUserName + ":-" + comt);
                         viewGroup.addView(textViewComment);
@@ -134,5 +154,6 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
             });
         }
     }
+
 
 }

@@ -27,18 +27,17 @@ import instagram.robosoft.com.mytestapplication.utils.Util;
  * Created by deena on 29/2/16.
  */
 public class RequestForCommentAsyncTask extends AsyncTask<String, CommentDetails, Void> {
-    HttpURLConnection httpURLConnection;
+    HttpURLConnection mHttpUrlConnection;
     private Context mContext;
     private ViewGroup mChildViewGroup;
-    private int commentCount;
-    private int count = 0;
+    private int mCommentCount;
+    private int mCount = 0;
     private SharedPreferences mSharedPreferences;
 
-    public RequestForCommentAsyncTask(ViewGroup childViewGroup, Context mContext, int commentCount) {
-        //Log.i("CommentAsyncTask", "DC");
+    public RequestForCommentAsyncTask(ViewGroup childViewGroup, Context mContext, int mCommentCount) {
         this.mContext = mContext;
         this.mChildViewGroup = childViewGroup;
-        this.commentCount = commentCount;
+        this.mCommentCount = mCommentCount;
         mSharedPreferences = mContext.getSharedPreferences(AppData.SETTINGPREFRENCE, Context.MODE_PRIVATE);
 
     }
@@ -46,27 +45,28 @@ public class RequestForCommentAsyncTask extends AsyncTask<String, CommentDetails
     @Override
     protected Void doInBackground(String... params) {
         try {
-            //Log.i("CommentAsyncTask", "doInBackground()");
             CommentDetails commentDetails;
             String recentComment = AppData.APIURL + "/media/" + params[0] + "/comments?access_token=" + AppData.accesstokn;
             URL url = new URL(recentComment);
-            httpURLConnection = (HttpURLConnection) url.openConnection();
-            String respose = String.valueOf(Util.covertInputStreamToString(httpURLConnection.getInputStream()));
-            //Log.i("CommentList", respose);
+            mHttpUrlConnection = (HttpURLConnection) url.openConnection();
+            String respose = String.valueOf(Util.covertInputStreamToString(mHttpUrlConnection.getInputStream()));
             JSONObject jsonObject = (JSONObject) new JSONTokener(respose).nextValue();
             JSONArray data = jsonObject.getJSONArray("data");
-            if (commentCount > data.length())
-                count = data.length();
-            else if (commentCount < data.length())
-                count = commentCount;
-            for (int i = 0; i < count; i++) {
-                commentDetails = new CommentDetails();
-                JSONObject object = data.getJSONObject(i);
-                String comment = object.getString("text");
-                String commentFromUser = object.getJSONObject("from").getString("username");
-                commentDetails.setCommentedBy(commentFromUser);
-                commentDetails.setComment(comment);
-                publishProgress(commentDetails);
+            if (mCommentCount > data.length())
+                mCount = data.length();
+            else if (mCommentCount < data.length())
+                mCount = mCommentCount;
+            int temp = data.length() - mCount;
+            for (int i = 0; i < data.length(); i++) {
+                if (i >= temp) {
+                    commentDetails = new CommentDetails();
+                    JSONObject object = data.getJSONObject(i);
+                    String comment = object.getString("text");
+                    String commentFromUser = object.getJSONObject("from").getString("username");
+                    commentDetails.setCommentedBy(commentFromUser);
+                    commentDetails.setComment(comment);
+                    publishProgress(commentDetails);
+                }
             }
         } catch (MalformedURLException e) {
             e.printStackTrace();
@@ -74,6 +74,8 @@ public class RequestForCommentAsyncTask extends AsyncTask<String, CommentDetails
             e.printStackTrace();
         } catch (JSONException e) {
             e.printStackTrace();
+        }finally {
+            mHttpUrlConnection.disconnect();
         }
         return null;
     }

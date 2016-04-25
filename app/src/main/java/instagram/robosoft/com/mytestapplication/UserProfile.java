@@ -13,10 +13,9 @@ import com.squareup.picasso.Picasso;
 
 import instagram.robosoft.com.mytestapplication.communicator.ImageAsyncCallBack;
 import instagram.robosoft.com.mytestapplication.constant.AppData;
-import instagram.robosoft.com.mytestapplication.utils.ImageDownloader;
 
-public class UserProfile extends AppCompatActivity implements ImageAsyncCallBack {
-    private TextView txtTotalPosts, txtTotalFollwers, txtTotalFollowing;
+public class UserProfile extends AppCompatActivity {
+    private TextView txtTotalPosts, txtTotalFollwers, txtTotalFollowing, txtUserName;
     private ImageView mUserProfilePic;
     private String[] mUserDetails;
     private Bitmap mBitmap;
@@ -28,32 +27,24 @@ public class UserProfile extends AppCompatActivity implements ImageAsyncCallBack
         txtTotalPosts = (TextView) findViewById(R.id.txttotalposts);
         txtTotalFollwers = (TextView) findViewById(R.id.txttotalfollwers);
         txtTotalFollowing = (TextView) findViewById(R.id.txttotalfollowing);
-        mUserProfilePic = (ImageView) findViewById(R.id.userimages);
+        txtUserName = (TextView) findViewById(R.id.txtuserName);
+        mUserProfilePic = (ImageView) findViewById(R.id.userimage);
 
-        Log.i("Testtt", "OnCreate()");
+        if (savedInstanceState != null) {
+            mUserDetails = savedInstanceState.getStringArray(AppData.USER_PROFILE_DETAILS);
+        } else {
+            Intent intent = getIntent();
+            mUserDetails = intent.getStringArrayExtra(AppData.USERDETAILS);
 
-        Intent intent = getIntent();
-        mUserDetails = intent.getStringArrayExtra(AppData.USERDETAILS);
-        Log.i("Test", mUserDetails[0] + " UserName" + "  " + mUserDetails[1]);
-        //if (savedInstanceState == null) {
+        }
+        txtUserName.setText(mUserDetails[0]);
 
         Picasso.with(this).load(mUserDetails[1]).into(mUserProfilePic);
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
+        outState.putStringArray(AppData.USER_PROFILE_DETAILS, mUserDetails);
         super.onSaveInstanceState(outState);
-        outState.putStringArray("userProfileInfo", mUserDetails);
-    }
-
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        mUserDetails = savedInstanceState.getStringArray("userProfileInfo");
-    }
-
-    @Override
-    public void processFinish(Bitmap bitmap, String Url) {
-        mUserProfilePic.setImageBitmap(bitmap);
     }
 }

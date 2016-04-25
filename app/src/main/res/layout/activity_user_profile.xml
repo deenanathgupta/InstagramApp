@@ -6,7 +6,7 @@
     tools:context="instagram.robosoft.com.mytestapplication.UserProfile">
 
     <de.hdodenhof.circleimageview.CircleImageView
-        android:id="@+id/userimages"
+        android:id="@+id/userimage"
         android:layout_width="@dimen/userprofileImage"
         android:layout_height="@dimen/userprofileImage"
         android:layout_alignParentTop="true"
@@ -20,7 +20,7 @@
         android:id="@+id/innerlayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/userimages"
+        android:layout_below="@id/userimage"
         android:layout_marginTop="20dp"
         android:orientation="horizontal"
         android:weightSum="3">
@@ -95,4 +95,13 @@
         android:layout_margin="@dimen/activity_horizontal_margin"
         android:layout_marginTop="41dp"
         android:text="Edit Your Profile" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="Large Text"
+        android:id="@+id/txtuserName"
+        android:layout_below="@+id/userimage"
+        android:layout_centerHorizontal="true" />
 </RelativeLayout>

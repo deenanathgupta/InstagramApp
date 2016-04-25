@@ -3,10 +3,12 @@ package instagram.robosoft.com.mytestapplication.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.ArrayList;
+
 /**
  * Created by deena on 26/2/16.
  */
-public class MediaDetails implements Parcelable{
+public class MediaDetails implements Parcelable {
     private String mediaUrl;
     private String postDescription;
     private String mediaId;
@@ -15,6 +17,8 @@ public class MediaDetails implements Parcelable{
     private String userProfilePic;
     private String userName;
     private String createdTime;
+    private ArrayList<CommentDetails> commentDetailsArrayList;
+    private String dateDiff;
 
     public MediaDetails(Parcel in) {
         mediaUrl = in.readString();
@@ -24,7 +28,8 @@ public class MediaDetails implements Parcelable{
         totlaNoOfComment = in.readString();
         userProfilePic = in.readString();
         userName = in.readString();
-        createdTime=in.readString();
+        createdTime = in.readString();
+        dateDiff = in.readString();
     }
 
     public MediaDetails() {
@@ -41,6 +46,22 @@ public class MediaDetails implements Parcelable{
             return new MediaDetails[size];
         }
     };
+
+    public String getDateDiff() {
+        return dateDiff;
+    }
+
+    public void setDateDiff(String dateDiff) {
+        this.dateDiff = dateDiff;
+    }
+
+    public ArrayList<CommentDetails> getCommentDetailsArrayList() {
+        return commentDetailsArrayList;
+    }
+
+    public void setCommentDetailsArrayList(ArrayList<CommentDetails> commentDetailsArrayList) {
+        this.commentDetailsArrayList = commentDetailsArrayList;
+    }
 
     public String getCraetedTime() {
         return createdTime;
@@ -121,5 +142,6 @@ public class MediaDetails implements Parcelable{
         dest.writeString(userProfilePic);
         dest.writeString(userName);
         dest.writeString(createdTime);
+        dest.writeString(dateDiff);
     }
 }

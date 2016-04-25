@@ -1,7 +1,9 @@
 package instagram.robosoft.com.mytestapplication.asynctask;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.text.format.DateUtils;
 import android.text.format.Time;
 import android.util.Log;
 import android.widget.LinearLayout;
@@ -15,6 +17,7 @@ import org.json.JSONTokener;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -26,6 +29,7 @@ import java.util.Map;
 
 import instagram.robosoft.com.mytestapplication.communicator.MediaDetailsDataCommunicatior;
 import instagram.robosoft.com.mytestapplication.constant.AppData;
+import instagram.robosoft.com.mytestapplication.model.CommentDetails;
 import instagram.robosoft.com.mytestapplication.model.MediaDetails;
 import instagram.robosoft.com.mytestapplication.utils.Util;
 
@@ -39,59 +43,65 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, ArrayList<Med
     private Context mContext;
     private ArrayList<MediaDetails> mediaDetailseslist;
     private MediaDetailsDataCommunicatior mCallBack;
-    private int mTotalNoOfFollowers;
+    private String nextUrl;
+    private URL url;
 
+    private SharedPreferences mSharedPreference;
+    private int mCommentCountDisplay;
 
     public MediaDetailsAsyncTask(Context mContext) {
         this.mContext = mContext;
         mCallBack = (MediaDetailsDataCommunicatior) mContext;
         mediaDetailseslist = new ArrayList<>();
-    }
-
-    @Override
-    protected void onPreExecute() {
-        super.onPreExecute();
-
+        mSharedPreference = mContext.getSharedPreferences(AppData.SETTINGPREFRENCE, mContext.MODE_PRIVATE);
+        mCommentCountDisplay = Integer.parseInt(mSharedPreference.getString(AppData.SettingKey, AppData.defaultNoOfComment));
     }
 
     @Override
     protected ArrayList<MediaDetails> doInBackground(String... params) {
+        JSONArray jsonArray;
+        if (params.length == 2) {
+            try {
+                jsonArray = urlConnection(params[0]);
+                convertStringIntoJavaObject(jsonArray);
+                //get media details of Followers
+                jsonArray = urlConnection(params[1]);
+                String follwerId[] = new String[jsonArray.length()];
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    follwerId[i] = jsonArray.getJSONObject(i).getString("id");
+                }
+                //get media details json data of followers
+                for (int i = 0; i < follwerId.length; i++) {
+                    String media = AppData.APIURL + "/users/" + follwerId[i] + "/media/recent/?access_token=" + AppData.accesstokn + "&count=" + AppData.DEFAULT_LOAD_DATA;
+                    jsonArray = urlConnection(media);
+                    convertStringIntoJavaObject(jsonArray);
+                }
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        } else {
+            jsonArray = urlConnection(params[0]);
+            convertStringIntoJavaObject(jsonArray);
+        }
+
+        return mediaDetailseslist;
+    }
+
+    private JSONArray urlConnection(String Url) {
+        String respose;
+        JSONArray data = null;
         try {
-            URL url = new URL(params[0]);
+            url = new URL(Url);
             httpURLConnection = (HttpURLConnection) url.openConnection();
-            String respose = String.valueOf(Util.covertInputStreamToString(httpURLConnection.getInputStream()));
-            JSONObject jsonObject = (JSONObject) new JSONTokener(respose).nextValue();
-            JSONArray data = jsonObject.getJSONArray("data");
-            convertStringIntoJavaObject(data, false);
-            //get media details of Followers
-            url = new URL(params[1]);
-            httpURLConnection = (HttpURLConnection) url.openConnection();
-            httpURLConnection.setRequestMethod("GET");
             respose = String.valueOf(Util.covertInputStreamToString(httpURLConnection.getInputStream()));
-            //Log.i("Follws", respose);
-            JSONObject follwesByJson = (JSONObject) new JSONTokener(respose).nextValue();
-            JSONArray follwesByJsonJSONArray = follwesByJson.getJSONArray("data");
-            String follwerId[] = new String[follwesByJsonJSONArray.length()];
-            for (int i = 0; i < follwesByJsonJSONArray.length(); i++) {
-                follwerId[i] = follwesByJsonJSONArray.getJSONObject(i).getString("id");
-            }
-            mTotalNoOfFollowers = follwerId.length;
-            Log.i("Test", "Total No OF followers: " + mTotalNoOfFollowers);
+            JSONObject jsonObject = (JSONObject) new JSONTokener(respose).nextValue();
+            JSONObject paginationJsonObject = jsonObject.getJSONObject("pagination");
+            if (!paginationJsonObject.isNull("next_url")) {
+                nextUrl = paginationJsonObject.getString("next_url");
 
-            //get media details json data of follower
-            for (int i = 0; i < follwerId.length; i++) {
-                String media = "https://api.instagram.com/v1/users/" + follwerId[i] + "/media/recent/?access_token=" + AppData.accesstokn;
-                url = new URL(media);
-                httpURLConnection = (HttpURLConnection) url.openConnection();
-                httpURLConnection.setRequestMethod("GET");
-                respose = String.valueOf(Util.covertInputStreamToString(httpURLConnection.getInputStream()));
-                Log.i("MediaDetails", respose);
-                //get details of mediaobject
-                JSONObject rootJsonObject = (JSONObject) new JSONTokener(respose).nextValue();
-                JSONArray rootJsonArray = rootJsonObject.getJSONArray("data");
-                convertStringIntoJavaObject(rootJsonArray, true);
             }
-
+            data = jsonObject.getJSONArray("data");
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -102,26 +112,19 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, ArrayList<Med
             if (httpURLConnection != null)
                 httpURLConnection.disconnect();
         }
-
-        return mediaDetailseslist;
+        return data;
     }
 
-    private void convertStringIntoJavaObject(JSONArray data, Boolean flag) {
+    private void convertStringIntoJavaObject(JSONArray data) {
         mediaId = new String[data.length()];
         for (int i = 0; i < data.length(); i++) {
             mediaDetails = new MediaDetails();
             JSONObject jsonObject1;
             try {
                 jsonObject1 = data.getJSONObject(i);
-
-                //Log.i("Test", jsonObject1.toString());
                 //get the media post date
                 String createdTime = jsonObject1.getString("created_time");
-                long foo = Long.parseLong(createdTime) * 1000;
-                Date date = new Date(foo);
-                DateFormat formatter = new SimpleDateFormat("MMMM dd,yyyy");
-
-                mediaDetails.setCraetedTime(formatter.format(date));
+                postDateOfFeed(createdTime);
                 String imageurl = jsonObject1.getJSONObject("images").getJSONObject("standard_resolution").getString("url");
                 String liked = jsonObject1.getJSONObject("likes").getString("count");
                 String caption, totalComment, mediaidd;
@@ -140,14 +143,41 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, ArrayList<Med
                 mediaDetails.setMediaUrl(imageurl);
                 mediaDetails.setTotalLike(liked);
                 mediaDetails.setMediaId(mediaId[i]);
-                //ChangesHere
                 mediaDetails.setUserProfilePic(profile_picture);
                 mediaDetails.setUserName(username);
-
                 mediaDetailseslist.add(mediaDetails);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private void postDateOfFeed(String createdTime) {
+        long postTime = Long.parseLong(createdTime) * 1000;
+        long currenrTime = new Date().getTime();
+        Date date = new Date(postTime);
+        DateFormat formatter = new SimpleDateFormat("MMMM dd,yyyy");
+        mediaDetails.setCraetedTime(formatter.format(date));
+        long diff = currenrTime - postTime;
+        long diffSeconds = diff / 1000 % 60;
+        long diffMinutes = diff / (60 * 1000) % 60;
+        long diffHours = diff / (60 * 60 * 1000);
+        long diffInDays = (diff) / (1000 * 60 * 60 * 24);
+
+        if (diffInDays >= 1) {
+            mediaDetails.setDateDiff(diffInDays + "d");
+            if (diffInDays >= 30 && diffInDays < 365)
+                mediaDetails.setDateDiff((diffInDays / 30) + "M");
+            else if (diffInDays < 30 && diffInDays >= 7)
+                mediaDetails.setDateDiff((diffInDays % 7) + "w");
+            else if (diffInDays >= 365)
+                mediaDetails.setDateDiff((diffInDays % 365) + "y");
+        } else if (diffHours >= 1 && diffHours <= 24) {
+            mediaDetails.setDateDiff(diffHours + "h");
+        } else if (diffMinutes <= 60 && diffMinutes >= 1) {
+            mediaDetails.setDateDiff(diffMinutes + "m");
+        } else {
+            mediaDetails.setDateDiff(diffSeconds + "s");
         }
     }
 

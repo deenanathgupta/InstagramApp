@@ -4,6 +4,7 @@ package instagram.robosoft.com.mytestapplication.constant;
  * Created by deena on 24/2/16.
  */
 public class AppData {
+    public static final String DEFAULT_LOAD_DATA = "10";
     public static final String CLIENT_ID = "34ae8543c6214ca684eb28a2b63f233d";
     public static final String CLIENT_SECRET = "2d189f48a2c442fcbf5e7ba58364329c";
     public static final String accesstokn = "1792605782.34ae854.4533e192666a41bcaf546c6d8121c09f";
@@ -16,8 +17,9 @@ public class AppData {
             CALLBACKURL + "&response_type=code&display=touch&scope=likes+comments+relationships+public_content+follower_list";
     public static final String tokenURLString = TOKENURL + "?client_id=" + CLIENT_ID + "&client_secret=" + CLIENT_SECRET + "&redirect_uri=" + CALLBACKURL + "&grant_type=authorization_code";
 
-    public static final String USER_INFORMATION = APIURL + "/users/" + 1792605782 + "/media/recent/?access_token=" + accesstokn;
-    public static final String FOLLWERS = "https://api.instagram.com/v1/users/self/follows?access_token=" + AppData.accesstokn;
+    public static final String USER_INFORMATION = APIURL + "/users/" + 1792605782 + "/media/recent/?access_token=" + accesstokn + "&count=" + DEFAULT_LOAD_DATA;
+
+    public static final String FOLLWERS = "https://api.instagram.com/v1/users/self/follows?access_token=" + accesstokn;
 
     public static final String MYPREFERENCE = "Data";
     public static final String SETTINGPREFRENCE = "SettingData";
@@ -28,7 +30,12 @@ public class AppData {
     public static final String SettingKey = "SettingKey";
 
     public static final String USERDETAILS = "userDetails";
-    public static final String USER_COMMENT_DETAILS="data";
+    public static final String USER_COMMENT_DETAILS = "data";
 
+    public static final String SAVE_STATE_PARCELABLE_ARRAY_LIST = "Data";
+    public static final String USER_DETAILS_ARRAY = "userdetails";
+
+
+    public static final String defaultNoOfComment = "5";
+    public static final String USER_PROFILE_DETAILS = "userProfileInfo";
 }
-
