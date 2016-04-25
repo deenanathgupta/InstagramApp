@@ -2,20 +2,25 @@ package instagram.robosoft.com.mytestapplication.adapter;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -51,6 +56,7 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
     private String mUserName = null;
     private int mCommentCount;
     private View mView;
+    private ViewHolder mViewHolder;
     HttpURLConnection httpURLConnection;
     private ArrayList<MediaDetails> mediaDetailseslist;
 
@@ -77,31 +83,42 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(final ViewHolder holder, int position) {
+        mViewHolder = holder;
         MediaDetails mediaDetails = mediaDetailseslist.get(position);
+        Bitmap bMapScaled;
         holder.txtTotalComment.setText(mediaDetails.getTotlaNoOfComment());
         holder.txtTotalLike.setText(mediaDetails.getTotalLike());
         holder.txtDescrption.setText(mediaDetails.getPostDescription());
         Bitmap bitmap = mLruCache.get(mediaDetails.getMediaUrl());
         Picasso.with(mContext).load(mediaDetails.getUserProfilePic()).into(holder.profilePic);
         holder.txtUserName.setText(mediaDetails.getUserName());
-         //holder.txtPostDate.setText(mediaDetails.getCraetedTime().substring(0, mediaDetails.getCraetedTime().indexOf(",")));
+        //holder.txtPostDate.setText(mediaDetails.getCraetedTime().substring(0, mediaDetails.getCraetedTime().indexOf(",")));
         holder.txtPostDate.setText(mediaDetails.getDateDiff() + "");
-        if (bitmap != null) {
-            holder.postImage.setImageBitmap(bitmap);
+
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        WindowManager wm = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
+        wm.getDefaultDisplay().getMetrics(displayMetrics);
+        int screenWidth = displayMetrics.widthPixels;
+        int screenHeight = displayMetrics.heightPixels;
+        if (mLruCache.get(mediaDetails.getMediaId()) != null) {
+            int currentOrientation = mContext.getResources().getConfiguration().orientation;
+            if (currentOrientation == Configuration.ORIENTATION_LANDSCAPE) {
+                bMapScaled = Bitmap.createScaledBitmap(bitmap, screenWidth, screenHeight, true);
+                holder.postImage.setImageBitmap(bMapScaled);
+            } else {
+                bMapScaled = Bitmap.createScaledBitmap(bitmap, screenWidth, 400, true);
+                holder.postImage.setImageBitmap(bMapScaled);
+            }
+
         } else {
             new ImageDownloader(holder.postImage, this).execute(mediaDetails.getMediaUrl());
         }
+
+
         holder.viewGroup.removeAllViews();
         new RequestForCommentAsyncTask(holder.viewGroup, mContext, mCommentCount).execute(mediaDetails.getMediaId());
 
-/*        ArrayList<CommentDetails> commentDetailsArrayList = mediaDetails.getCommentDetailsArrayList();
-        //Log.i("test", commentDetailsArrayList.size() + "");
-        for (CommentDetails commentDetails : commentDetailsArrayList) {
-            TextView textViewComment = new TextView(mContext);
-            textViewComment.append(commentDetails.getCommentedBy() + ":-" + commentDetails.getComment());
-            holder.viewGroup.addView(textViewComment);
-        }*/
     }
 
     @Override
@@ -111,8 +128,9 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
 
     @Override
     public void processFinish(Bitmap bitmap, String Url) {
-        if (bitmap != null)
+        if (bitmap != null) {
             mLruCache.put(Url, bitmap);
+        }
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
@@ -142,11 +160,10 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
                 @Override
                 public void onClick(View v) {
                     String comt = editText.getText().toString();
-                    Log.i("test", "UserName : " + mUserName);
                     if (comt.trim().length() != 0 && Util.isNwConnected(mContext)) {
                         TextView textViewComment = new TextView(mContext);
                         textViewComment.append(mUserName + ":-" + comt);
-                        viewGroup.addView(textViewComment);
+                        viewGroup.addView(textViewComment, 0);
                         new PostCommentAsyncTask(comt).execute(AppData.APIURL + "/media/" + mediaDetailseslist.get(getAdapterPosition()).getMediaId() + "/comments");
                         editText.setText("");
                     }

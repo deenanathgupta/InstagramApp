@@ -66,15 +66,17 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, ArrayList<Med
                 convertStringIntoJavaObject(jsonArray);
                 //get media details of Followers
                 jsonArray = urlConnection(params[1]);
-                String follwerId[] = new String[jsonArray.length()];
-                for (int i = 0; i < jsonArray.length(); i++) {
-                    follwerId[i] = jsonArray.getJSONObject(i).getString("id");
-                }
-                //get media details json data of followers
-                for (int i = 0; i < follwerId.length; i++) {
-                    String media = AppData.APIURL + "/users/" + follwerId[i] + "/media/recent/?access_token=" + AppData.accesstokn + "&count=" + AppData.DEFAULT_LOAD_DATA;
-                    jsonArray = urlConnection(media);
-                    convertStringIntoJavaObject(jsonArray);
+                if (jsonArray != null) {
+                    String follwerId[] = new String[jsonArray.length()];
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        follwerId[i] = jsonArray.getJSONObject(i).getString("id");
+                    }
+                    //get media details json data of followers
+                    for (int i = 0; i < follwerId.length; i++) {
+                        String media = AppData.APIURL + "/users/" + follwerId[i] + "/media/recent/?access_token=" + AppData.accesstokn + "&count=" + AppData.DEFAULT_LOAD_DATA;
+                        jsonArray = urlConnection(media);
+                        convertStringIntoJavaObject(jsonArray);
+                    }
                 }
 
             } catch (JSONException e) {
@@ -116,38 +118,40 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, ArrayList<Med
     }
 
     private void convertStringIntoJavaObject(JSONArray data) {
-        mediaId = new String[data.length()];
-        for (int i = 0; i < data.length(); i++) {
-            mediaDetails = new MediaDetails();
-            JSONObject jsonObject1;
-            try {
-                jsonObject1 = data.getJSONObject(i);
-                //get the media post date
-                String createdTime = jsonObject1.getString("created_time");
-                postDateOfFeed(createdTime);
-                String imageurl = jsonObject1.getJSONObject("images").getJSONObject("standard_resolution").getString("url");
-                String liked = jsonObject1.getJSONObject("likes").getString("count");
-                String caption, totalComment, mediaidd;
-                if (!jsonObject1.isNull("caption")) {
-                    caption = jsonObject1.getJSONObject("caption").getString("text");
-                    mediaDetails.setPostDescription(caption);
+        if (data != null) {
+            mediaId = new String[data.length()];
+            for (int i = 0; i < data.length(); i++) {
+                mediaDetails = new MediaDetails();
+                JSONObject jsonObject1;
+                try {
+                    jsonObject1 = data.getJSONObject(i);
+                    //get the media post date
+                    String createdTime = jsonObject1.getString("created_time");
+                    postDateOfFeed(createdTime);
+                    String imageurl = jsonObject1.getJSONObject("images").getJSONObject("standard_resolution").getString("url");
+                    String liked = jsonObject1.getJSONObject("likes").getString("count");
+                    String caption, totalComment, mediaidd;
+                    if (!jsonObject1.isNull("caption")) {
+                        caption = jsonObject1.getJSONObject("caption").getString("text");
+                        mediaDetails.setPostDescription(caption);
+                    }
+                    if (!jsonObject1.isNull("comments")) {
+                        totalComment = data.getJSONObject(i).getJSONObject("comments").getString("count");
+                        mediaDetails.setTotlaNoOfComment(totalComment);
+                    }
+                    String profile_picture = jsonObject1.getJSONObject("user").getString("profile_picture");
+                    String username = jsonObject1.getJSONObject("user").getString("username");
+                    mediaidd = jsonObject1.getString("id");
+                    mediaId[i] = mediaidd;
+                    mediaDetails.setMediaUrl(imageurl);
+                    mediaDetails.setTotalLike(liked);
+                    mediaDetails.setMediaId(mediaId[i]);
+                    mediaDetails.setUserProfilePic(profile_picture);
+                    mediaDetails.setUserName(username);
+                    mediaDetailseslist.add(mediaDetails);
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-                if (!jsonObject1.isNull("comments")) {
-                    totalComment = data.getJSONObject(i).getJSONObject("comments").getString("count");
-                    mediaDetails.setTotlaNoOfComment(totalComment);
-                }
-                String profile_picture = jsonObject1.getJSONObject("user").getString("profile_picture");
-                String username = jsonObject1.getJSONObject("user").getString("username");
-                mediaidd = jsonObject1.getString("id");
-                mediaId[i] = mediaidd;
-                mediaDetails.setMediaUrl(imageurl);
-                mediaDetails.setTotalLike(liked);
-                mediaDetails.setMediaId(mediaId[i]);
-                mediaDetails.setUserProfilePic(profile_picture);
-                mediaDetails.setUserName(username);
-                mediaDetailseslist.add(mediaDetails);
-            } catch (JSONException e) {
-                e.printStackTrace();
             }
         }
     }

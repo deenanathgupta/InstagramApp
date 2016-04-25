@@ -38,8 +38,6 @@ public class RequestForCommentAsyncTask extends AsyncTask<String, CommentDetails
         this.mContext = mContext;
         this.mChildViewGroup = childViewGroup;
         this.mCommentCount = mCommentCount;
-        mSharedPreferences = mContext.getSharedPreferences(AppData.SETTINGPREFRENCE, Context.MODE_PRIVATE);
-
     }
 
     @Override
@@ -85,7 +83,7 @@ public class RequestForCommentAsyncTask extends AsyncTask<String, CommentDetails
         super.onProgressUpdate(values);
         TextView textViewComment = new TextView(mContext);
         textViewComment.append(values[0].getCommentedBy() + ":-" + values[0].getComment());
-        mChildViewGroup.addView(textViewComment);
+        mChildViewGroup.addView(textViewComment,0);
 
     }
 }

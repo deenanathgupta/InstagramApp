@@ -85,6 +85,7 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
 
         initializeView();
 
+
         if (!Util.isNwConnected(this)) {
             mFloatingActionButton.show();
         } else {
@@ -174,8 +175,8 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
 
     @Override
     public void getMediaDetails(ArrayList<MediaDetails> l) {
-        /*mMediaDetailseslist = l;*/
-        mMediaDetailseslist.addAll(l);
+        mMediaDetailseslist = l;
+        //mMediaDetailseslist.addAll(l);
         passDataToAdapter();
         mSwipeRefreshLayout.setRefreshing(false);
     }
@@ -252,13 +253,10 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
 
                 if (input.trim().length() != 0) {
                     editor.putString(AppData.SettingKey, input);
-                    editor.apply();
+                    editor.commit();
                     mRecyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
                     mRecyclerviewAdapter = new RecyclerviewAdapter(mMediaDetailseslist, MainActivity.this, mUserdetails[0], Integer.parseInt(editText.getText().toString()));
                     mRecyclerView.setAdapter(mRecyclerviewAdapter);
-
-
-                    mRecyclerviewAdapter.notifyDataSetChanged();
                 } else {
                     Snackbar.make(mCoordinatorLayout, R.string.snackBarMessageForEditText, Snackbar.LENGTH_LONG).show();
                 }

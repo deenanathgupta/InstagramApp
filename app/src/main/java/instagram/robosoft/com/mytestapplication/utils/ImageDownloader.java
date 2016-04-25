@@ -1,6 +1,7 @@
 package instagram.robosoft.com.mytestapplication.utils;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
@@ -31,7 +32,6 @@ public class ImageDownloader extends AsyncTask<String, Void, Bitmap> {
 
     @Override
     protected Bitmap doInBackground(String... params) {
-        //Log.i("Test", "ImageDownloader Inside doInBackground");
         Url = params[0];
         try {
             mInputStream = (InputStream) new URL(Url).getContent();
@@ -53,7 +53,8 @@ public class ImageDownloader extends AsyncTask<String, Void, Bitmap> {
     @Override
     protected void onPostExecute(Bitmap bitmap) {
         super.onPostExecute(bitmap);
-        mImageView.setImageBitmap(bitmap);
+        Bitmap bitmapImage=Bitmap.createScaledBitmap(bitmap,760,480,true);
+        mImageView.setImageBitmap(bitmapImage);
         mImageAsyncCallBack.processFinish(bitmap, Url);
     }
 }
