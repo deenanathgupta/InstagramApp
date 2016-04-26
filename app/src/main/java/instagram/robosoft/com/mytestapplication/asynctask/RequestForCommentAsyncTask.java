@@ -1,11 +1,13 @@
 package instagram.robosoft.com.mytestapplication.asynctask;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import org.json.JSONArray;
@@ -17,73 +19,63 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import instagram.robosoft.com.mytestapplication.MainActivity;
+import instagram.robosoft.com.mytestapplication.communicator.CommentDetailsCallBack;
 import instagram.robosoft.com.mytestapplication.constant.AppData;
 import instagram.robosoft.com.mytestapplication.model.CommentDetails;
+import instagram.robosoft.com.mytestapplication.model.MediaDetails;
 import instagram.robosoft.com.mytestapplication.utils.Util;
 
 /**
  * Created by deena on 29/2/16.
  */
-public class RequestForCommentAsyncTask extends AsyncTask<String, CommentDetails, Void> {
-    HttpURLConnection mHttpUrlConnection;
-    private Context mContext;
-    private ViewGroup mChildViewGroup;
-    private int mCommentCount;
-    private int mCount = 0;
+public class RequestForCommentAsyncTask extends AsyncTask<String, CommentDetails, ArrayList<ArrayList<CommentDetails>>> {
     private SharedPreferences mSharedPreferences;
+    private ArrayList<MediaDetails> mediaDetailses;
+    int mCommentCountDisplay;
+    private ArrayList<ArrayList<CommentDetails>> commentArrayList;
+    private CommentDetailsCallBack commentDetailsCallBack;
+    private Util util;
+    private ProgressDialog progressBar;
+    private Context mContext;
 
-    public RequestForCommentAsyncTask(ViewGroup childViewGroup, Context mContext, int mCommentCount) {
+
+    public RequestForCommentAsyncTask(ArrayList<MediaDetails> mediaDetailses, Context mContext) {
+        this.mediaDetailses = mediaDetailses;
         this.mContext = mContext;
-        this.mChildViewGroup = childViewGroup;
-        this.mCommentCount = mCommentCount;
+        mSharedPreferences = mContext.getSharedPreferences(AppData.SETTINGPREFRENCE, mContext.MODE_PRIVATE);
+        mCommentCountDisplay = Integer.parseInt(mSharedPreferences.getString(AppData.SettingKey, AppData.defaultNoOfComment));
+        commentArrayList = new ArrayList<>();
+        commentDetailsCallBack = (CommentDetailsCallBack) mContext;
+        util = new Util();
+        progressBar = new ProgressDialog(mContext);
     }
 
     @Override
-    protected Void doInBackground(String... params) {
-        try {
-            CommentDetails commentDetails;
-            String recentComment = AppData.APIURL + "/media/" + params[0] + "/comments?access_token=" + AppData.accesstokn;
-            URL url = new URL(recentComment);
-            mHttpUrlConnection = (HttpURLConnection) url.openConnection();
-            String respose = String.valueOf(Util.covertInputStreamToString(mHttpUrlConnection.getInputStream()));
-            JSONObject jsonObject = (JSONObject) new JSONTokener(respose).nextValue();
-            JSONArray data = jsonObject.getJSONArray("data");
-            if (mCommentCount > data.length())
-                mCount = data.length();
-            else if (mCommentCount < data.length())
-                mCount = mCommentCount;
-            int temp = data.length() - mCount;
-            for (int i = 0; i < data.length(); i++) {
-                if (i >= temp) {
-                    commentDetails = new CommentDetails();
-                    JSONObject object = data.getJSONObject(i);
-                    String comment = object.getString("text");
-                    String commentFromUser = object.getJSONObject("from").getString("username");
-                    commentDetails.setCommentedBy(commentFromUser);
-                    commentDetails.setComment(comment);
-                    publishProgress(commentDetails);
-                }
-            }
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }finally {
-            mHttpUrlConnection.disconnect();
+    protected void onPreExecute() {
+        super.onPreExecute();
+        progressBar=ProgressDialog.show(mContext,"","Loading...");
+    }
+
+    @Override
+    protected ArrayList<ArrayList<CommentDetails>> doInBackground(String... params) {
+        for (MediaDetails mediaDetails : mediaDetailses) {
+            ArrayList<CommentDetails> arrayList = util.getCommentDetails(mediaDetails.getMediaId(), mCommentCountDisplay);
+            commentArrayList.add(arrayList);
         }
-        return null;
+
+
+        return commentArrayList;
     }
 
     @Override
-    protected void onProgressUpdate(CommentDetails... values) {
-        super.onProgressUpdate(values);
-        TextView textViewComment = new TextView(mContext);
-        textViewComment.append(values[0].getCommentedBy() + ":-" + values[0].getComment());
-        mChildViewGroup.addView(textViewComment,0);
-
+    protected void onPostExecute(ArrayList<ArrayList<CommentDetails>> arrayLists) {
+        super.onPostExecute(arrayLists);
+        commentDetailsCallBack.commentDetails(arrayLists);
+        progressBar.dismiss();
     }
+
 }

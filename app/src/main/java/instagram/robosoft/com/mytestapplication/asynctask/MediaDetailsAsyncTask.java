@@ -45,9 +45,9 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, ArrayList<Med
     private MediaDetailsDataCommunicatior mCallBack;
     private String nextUrl;
     private URL url;
-
     private SharedPreferences mSharedPreference;
     private int mCommentCountDisplay;
+    private Util util;
 
     public MediaDetailsAsyncTask(Context mContext) {
         this.mContext = mContext;
@@ -55,6 +55,7 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, ArrayList<Med
         mediaDetailseslist = new ArrayList<>();
         mSharedPreference = mContext.getSharedPreferences(AppData.SETTINGPREFRENCE, mContext.MODE_PRIVATE);
         mCommentCountDisplay = Integer.parseInt(mSharedPreference.getString(AppData.SettingKey, AppData.defaultNoOfComment));
+        util = new Util();
     }
 
     @Override
@@ -62,10 +63,10 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, ArrayList<Med
         JSONArray jsonArray;
         if (params.length == 2) {
             try {
-                jsonArray = urlConnection(params[0]);
+                jsonArray = util.urlConnection(params[0]);
                 convertStringIntoJavaObject(jsonArray);
                 //get media details of Followers
-                jsonArray = urlConnection(params[1]);
+                jsonArray = util.urlConnection(params[1]);
                 if (jsonArray != null) {
                     String follwerId[] = new String[jsonArray.length()];
                     for (int i = 0; i < jsonArray.length(); i++) {
@@ -74,7 +75,7 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, ArrayList<Med
                     //get media details json data of followers
                     for (int i = 0; i < follwerId.length; i++) {
                         String media = AppData.APIURL + "/users/" + follwerId[i] + "/media/recent/?access_token=" + AppData.accesstokn + "&count=" + AppData.DEFAULT_LOAD_DATA;
-                        jsonArray = urlConnection(media);
+                        jsonArray = util.urlConnection(media);
                         convertStringIntoJavaObject(jsonArray);
                     }
                 }
@@ -83,38 +84,11 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, ArrayList<Med
                 e.printStackTrace();
             }
         } else {
-            jsonArray = urlConnection(params[0]);
+            jsonArray = util.urlConnection(params[0]);
             convertStringIntoJavaObject(jsonArray);
         }
 
         return mediaDetailseslist;
-    }
-
-    private JSONArray urlConnection(String Url) {
-        String respose;
-        JSONArray data = null;
-        try {
-            url = new URL(Url);
-            httpURLConnection = (HttpURLConnection) url.openConnection();
-            respose = String.valueOf(Util.covertInputStreamToString(httpURLConnection.getInputStream()));
-            JSONObject jsonObject = (JSONObject) new JSONTokener(respose).nextValue();
-            JSONObject paginationJsonObject = jsonObject.getJSONObject("pagination");
-            if (!paginationJsonObject.isNull("next_url")) {
-                nextUrl = paginationJsonObject.getString("next_url");
-
-            }
-            data = jsonObject.getJSONArray("data");
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (JSONException e) {
-            e.printStackTrace();
-        } finally {
-            if (httpURLConnection != null)
-                httpURLConnection.disconnect();
-        }
-        return data;
     }
 
     private void convertStringIntoJavaObject(JSONArray data) {
@@ -148,6 +122,9 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, ArrayList<Med
                     mediaDetails.setMediaId(mediaId[i]);
                     mediaDetails.setUserProfilePic(profile_picture);
                     mediaDetails.setUserName(username);
+
+                    ArrayList<CommentDetails> arrayList = util.getCommentDetails(mediaId[i], mCommentCountDisplay);
+                    mediaDetails.setCommentDetailsArrayList(arrayList);
                     mediaDetailseslist.add(mediaDetails);
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -156,12 +133,10 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, ArrayList<Med
         }
     }
 
+
     private void postDateOfFeed(String createdTime) {
         long postTime = Long.parseLong(createdTime) * 1000;
         long currenrTime = new Date().getTime();
-        Date date = new Date(postTime);
-        DateFormat formatter = new SimpleDateFormat("MMMM dd,yyyy");
-        mediaDetails.setCraetedTime(formatter.format(date));
         long diff = currenrTime - postTime;
         long diffSeconds = diff / 1000 % 60;
         long diffMinutes = diff / (60 * 1000) % 60;
@@ -189,5 +164,7 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, ArrayList<Med
     protected void onPostExecute(ArrayList<MediaDetails> mediaDetailses) {
         mCallBack.getMediaDetails(mediaDetailses);
     }
+
+
 }
 

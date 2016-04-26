@@ -71,7 +71,6 @@ public class GetAccessToken extends AsyncTask<String, Void, String[]> {
             mUserDetails[0] = username;
             mUserDetails[1] = mUserprofilePic;
 
-            Log.i("IDName", "ProfilePic  " + mUserprofilePic);
             editor.putString(AppData.accesstoken, mAccessTokenString);
             editor.apply();
 

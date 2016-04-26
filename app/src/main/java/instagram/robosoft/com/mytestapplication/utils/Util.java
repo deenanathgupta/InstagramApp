@@ -1,23 +1,41 @@
 package instagram.robosoft.com.mytestapplication.utils;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.util.Log;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+
+import instagram.robosoft.com.mytestapplication.constant.AppData;
+import instagram.robosoft.com.mytestapplication.model.CommentDetails;
 
 /**
  * Created by deena on 25/2/16.
  */
 public class Util {
+    private HttpURLConnection httpURLConnection;
+
+    public Util() {
+
+    }
+
     public static StringBuffer covertInputStreamToString(InputStream inputStream) throws IOException {
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
         String line = "";
-        // Log.i("Test", "covertInputStreamToString()");
         StringBuffer data = new StringBuffer();
         try {
             while ((line = bufferedReader.readLine()) != null) {
@@ -36,10 +54,68 @@ public class Util {
                 (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo nwInfo = connectivityManager.getActiveNetworkInfo();
         if (nwInfo != null && nwInfo.isAvailable()) {
-            Log.i("Deena", "Inside Utiltity");
             return true;
         }
         return false;
     }
+     public JSONArray urlConnection(String Url) {
+            String respose,nextUrl;
+            JSONArray data = null;URL url;
+            try {
+                url = new URL(Url);
+                httpURLConnection = (HttpURLConnection) url.openConnection();
+                respose = String.valueOf(Util.covertInputStreamToString(httpURLConnection.getInputStream()));
+                JSONObject jsonObject = (JSONObject) new JSONTokener(respose).nextValue();
+                if (jsonObject.has("pagination")) {
+                    JSONObject paginationJsonObject = jsonObject.getJSONObject("pagination");
+                    if (!paginationJsonObject.isNull("next_url")) {
+                        nextUrl = paginationJsonObject.getString("next_url");
+                    }
+                }
+                data = jsonObject.getJSONArray("data");
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            } finally {
+                if (httpURLConnection != null)
+                    httpURLConnection.disconnect();
+            }
+            return data;
+        }
 
+    public ArrayList<CommentDetails> getCommentDetails(String mediaId, int mCommentCountDisplay) {
+        CommentDetails commentDetails;
+        ArrayList<CommentDetails> arrayList = new ArrayList<>();
+        int count = 0;
+        int commentCount = mCommentCountDisplay;
+        String recentComment = AppData.APIURL + "/media/" + mediaId + "/comments?access_token=" + AppData.accesstokn;
+        try {
+            JSONArray data=urlConnection(recentComment);
+            if (commentCount > data.length())
+                count = data.length();
+            else if (commentCount < data.length())
+                count = commentCount;
+            int temp = data.length() - count;
+
+            for (int i = 0; i < data.length(); i++) {
+                if (i >= temp) {
+                    commentDetails = new CommentDetails();
+                    JSONObject object = data.getJSONObject(i);
+                    String comment = object.getString("text");
+                    String commentFromUser = object.getJSONObject("from").getString("username");
+                    commentDetails.setCommentedBy(commentFromUser);
+                    commentDetails.setComment(comment);
+                    arrayList.add(commentDetails);
+                }
+            }
+        }  catch (JSONException e) {
+            e.printStackTrace();
+        } finally {
+            httpURLConnection.disconnect();
+        }
+        return arrayList;
+    }
 }

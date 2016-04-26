@@ -117,7 +117,13 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
 
 
         holder.viewGroup.removeAllViews();
-        new RequestForCommentAsyncTask(holder.viewGroup, mContext, mCommentCount).execute(mediaDetails.getMediaId());
+        //new RequestForCommentAsyncTask(holder.viewGroup, mContext, mCommentCount).execute(mediaDetails.getMediaId());
+        ArrayList<CommentDetails> arrayListComment = mediaDetailseslist.get(position).getCommentDetailsArrayList();
+        for (CommentDetails commentDetails : arrayListComment) {
+            TextView textViewComment = new TextView(mContext);
+            textViewComment.append(commentDetails.getCommentedBy() + ":-" + commentDetails.getComment());
+            holder.viewGroup.addView(textViewComment);
+        }
 
     }
 

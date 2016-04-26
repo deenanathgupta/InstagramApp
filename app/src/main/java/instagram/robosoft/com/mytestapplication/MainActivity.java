@@ -54,14 +54,16 @@ import java.util.Map;
 
 import instagram.robosoft.com.mytestapplication.adapter.RecyclerviewAdapter;
 import instagram.robosoft.com.mytestapplication.asynctask.MediaDetailsAsyncTask;
+import instagram.robosoft.com.mytestapplication.asynctask.RequestForCommentAsyncTask;
 import instagram.robosoft.com.mytestapplication.communicator.CallBack;
+import instagram.robosoft.com.mytestapplication.communicator.CommentDetailsCallBack;
 import instagram.robosoft.com.mytestapplication.communicator.MediaDetailsDataCommunicatior;
 import instagram.robosoft.com.mytestapplication.constant.AppData;
 import instagram.robosoft.com.mytestapplication.model.CommentDetails;
 import instagram.robosoft.com.mytestapplication.model.MediaDetails;
 import instagram.robosoft.com.mytestapplication.utils.Util;
 
-public class MainActivity extends AppCompatActivity implements CallBack, MediaDetailsDataCommunicatior, View.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
+public class MainActivity extends AppCompatActivity implements CallBack, MediaDetailsDataCommunicatior,CommentDetailsCallBack, View.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
 
     private RecyclerView mRecyclerView;
     private SharedPreferences mSharedPreferences;
@@ -84,7 +86,6 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
         setContentView(R.layout.activity_main);
 
         initializeView();
-
 
         if (!Util.isNwConnected(this)) {
             mFloatingActionButton.show();
@@ -176,7 +177,6 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     @Override
     public void getMediaDetails(ArrayList<MediaDetails> l) {
         mMediaDetailseslist = l;
-        //mMediaDetailseslist.addAll(l);
         passDataToAdapter();
         mSwipeRefreshLayout.setRefreshing(false);
     }
@@ -254,9 +254,7 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
                 if (input.trim().length() != 0) {
                     editor.putString(AppData.SettingKey, input);
                     editor.commit();
-                    mRecyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
-                    mRecyclerviewAdapter = new RecyclerviewAdapter(mMediaDetailseslist, MainActivity.this, mUserdetails[0], Integer.parseInt(editText.getText().toString()));
-                    mRecyclerView.setAdapter(mRecyclerviewAdapter);
+                    new RequestForCommentAsyncTask(mMediaDetailseslist,MainActivity.this).execute();
                 } else {
                     Snackbar.make(mCoordinatorLayout, R.string.snackBarMessageForEditText, Snackbar.LENGTH_LONG).show();
                 }
@@ -279,6 +277,16 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     @Override
     public void onRefresh() {
         new MediaDetailsAsyncTask(this).execute(AppData.USER_INFORMATION, AppData.FOLLWERS);
+    }
+
+    @Override
+    public void commentDetails(ArrayList<ArrayList<CommentDetails>> commentArrayList) {
+        int indx=0;
+        for (ArrayList<CommentDetails> arrayList:commentArrayList){
+                mMediaDetailseslist.get(indx).setCommentDetailsArrayList(arrayList);
+            indx++;
+        }
+        mRecyclerviewAdapter.notifyDataSetChanged();
     }
 }
 
