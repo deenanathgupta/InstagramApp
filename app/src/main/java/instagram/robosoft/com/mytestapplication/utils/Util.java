@@ -29,8 +29,9 @@ import instagram.robosoft.com.mytestapplication.model.CommentDetails;
 /**
  * Created by deena on 25/2/16.
  */
-public class Util implements Serializable{
-    private ArrayList<String> nextUrlArrayList = new ArrayList<>();;
+public class Util implements Serializable {
+    private ArrayList<String> nextUrlArrayList = new ArrayList<>();
+    ;
     private HttpURLConnection httpURLConnection;
 
     public Util() {
@@ -127,7 +128,7 @@ public class Util implements Serializable{
         return arrayList;
     }
 
-    public  ArrayList<String> getNextUrlArrayList() {
+    public ArrayList<String> getNextUrlArrayList() {
         return nextUrlArrayList;
     }
 }

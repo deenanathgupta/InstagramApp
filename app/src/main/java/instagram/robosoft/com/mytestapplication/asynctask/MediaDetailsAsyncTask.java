@@ -49,6 +49,7 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Util> {
     private int mCommentCountDisplay;
     private Util util;
     private ArrayList<String> nextUrlArrayList;
+    private Boolean mFlag = false;
 
     public MediaDetailsAsyncTask(Context mContext) {
         this.mContext = mContext;
@@ -73,6 +74,7 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Util> {
     protected Util doInBackground(String... params) {
         JSONArray jsonArray;
         if (params.length == 2) {
+            mFlag = true;
             try {
                 jsonArray = util.urlConnection(params[0]);
                 convertStringIntoJavaObject(jsonArray);
@@ -95,7 +97,8 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Util> {
                 e.printStackTrace();
             }
         } else {
-            for (String string:nextUrlArrayList) {
+            mFlag = false;
+            for (String string : nextUrlArrayList) {
                 jsonArray = util.urlConnection(string);
                 convertStringIntoJavaObject(jsonArray);
             }
@@ -116,6 +119,7 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Util> {
                     String createdTime = jsonObject1.getString("created_time");
                     postDateOfFeed(createdTime);
                     String imageurl = jsonObject1.getJSONObject("images").getJSONObject("standard_resolution").getString("url");
+                    Log.i("test", "iMage Url: " + imageurl);
                     String liked = jsonObject1.getJSONObject("likes").getString("count");
                     String caption, totalComment, mediaidd;
                     if (!jsonObject1.isNull("caption")) {
@@ -173,22 +177,10 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Util> {
         }
     }
 
-   /* @Override
-    protected Void onPostExecute() {
-        mCallBack.getMediaDetails(mediaDetailses);
-        ArrayList<String> st=util.getNextUrlArrayList();
-        Log.i("test", "Size of Array :" + st.size());
-        return  null;
-
-    }
-*/
-
     @Override
     protected void onPostExecute(Util util) {
         super.onPostExecute(util);
-        mCallBack.getMediaDetails(mediaDetailseslist,util);
-        ArrayList<String> st=util.getNextUrlArrayList();
-        Log.i("test", "Size of Array :" + st.size());
+        mCallBack.getMediaDetails(mediaDetailseslist, util,mFlag);
     }
 }
 

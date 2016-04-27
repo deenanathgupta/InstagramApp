@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
 //            mUtil = savedInstanceState.getSerializable("util");
             if (mUserdetails[0] != null)
                 getSupportActionBar().setTitle(mUserdetails[0]);
-            passDataToAdapter();
+            passDataToAdapter(true);
         }
 
     }
@@ -147,7 +147,7 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
                 super.onScrollStateChanged(recyclerView, newState);
                 if (newState == AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL) {
                     mUserScrolled = true;
-                    Log.i("test", "onScrollStateChanged()");
+                    //Log.i("test", "onScrollStateChanged()");
                 }
             }
 
@@ -176,10 +176,7 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     }
 
     private void updateRecyclerView(ArrayList<String> nextUrlArrayList) {
-        Log.i("test", "onScrolled() " + nextUrlArrayList.size());
-        //for (String url : nextUrlArrayList) {
-            new MediaDetailsAsyncTask(nextUrlArrayList,MainActivity.this).execute();
-        //}
+        new MediaDetailsAsyncTask(nextUrlArrayList, MainActivity.this).execute();
     }
 
     public void reloadConnection() {
@@ -219,24 +216,28 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     }
 
     @Override
-    public void getMediaDetails(ArrayList<MediaDetails> l, Util util) {
+    public void getMediaDetails(ArrayList<MediaDetails> l, Util util, Boolean flag) {
         //mMediaDetailseslist = l;
         Log.i("test", "SizeofCallBack Array: " + l.size());
         mMediaDetailseslist.addAll(l);
+        passDataToAdapter(flag);
+
         mUtil = util;
-        passDataToAdapter();
         mSwipeRefreshLayout.setRefreshing(false);
     }
 
-    private void passDataToAdapter() {
+    private void passDataToAdapter(Boolean flag) {
         webView.setVisibility(View.GONE);
-        mCommentCountDisplay = Integer.parseInt(mSharedPreferences.getString(AppData.SettingKey, AppData.defaultNoOfComment));
-        mRecyclerView.setVisibility(View.VISIBLE);
-        mLinearLayoutManager = new LinearLayoutManager(this);
-        mRecyclerView.setLayoutManager(mLinearLayoutManager);
-        mRecyclerviewAdapter = new RecyclerviewAdapter(mMediaDetailseslist, this, mUserdetails[0], mCommentCountDisplay);
-        mRecyclerView.setAdapter(mRecyclerviewAdapter);
-
+        if (flag) {
+            mCommentCountDisplay = Integer.parseInt(mSharedPreferences.getString(AppData.SettingKey, AppData.defaultNoOfComment));
+            mRecyclerView.setVisibility(View.VISIBLE);
+            mLinearLayoutManager = new LinearLayoutManager(this);
+            mRecyclerView.setLayoutManager(mLinearLayoutManager);
+            mRecyclerviewAdapter = new RecyclerviewAdapter(mMediaDetailseslist, this, mUserdetails[0], mCommentCountDisplay);
+            mRecyclerView.setAdapter(mRecyclerviewAdapter);
+        } else {
+            mRecyclerviewAdapter.notifyDataSetChanged();
+        }
 
         mLinearLayout.setVisibility(View.GONE);
     }
