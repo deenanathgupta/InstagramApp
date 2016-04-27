@@ -36,7 +36,7 @@ import instagram.robosoft.com.mytestapplication.utils.Util;
 /**
  * Created by deena on 25/2/16.
  */
-public class MediaDetailsAsyncTask extends AsyncTask<String, Void, ArrayList<MediaDetails>> {
+public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Util> {
     private HttpURLConnection httpURLConnection = null;
     private String mediaId[];
     private MediaDetails mediaDetails;
@@ -48,6 +48,7 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, ArrayList<Med
     private SharedPreferences mSharedPreference;
     private int mCommentCountDisplay;
     private Util util;
+    private ArrayList<String> nextUrlArrayList;
 
     public MediaDetailsAsyncTask(Context mContext) {
         this.mContext = mContext;
@@ -58,8 +59,18 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, ArrayList<Med
         util = new Util();
     }
 
+    public MediaDetailsAsyncTask(ArrayList<String> nextUrlArrayList, Context mContext) {
+        this.nextUrlArrayList = nextUrlArrayList;
+        this.mContext = mContext;
+        mCallBack = (MediaDetailsDataCommunicatior) mContext;
+        mediaDetailseslist = new ArrayList<>();
+        mSharedPreference = mContext.getSharedPreferences(AppData.SETTINGPREFRENCE, mContext.MODE_PRIVATE);
+        mCommentCountDisplay = Integer.parseInt(mSharedPreference.getString(AppData.SettingKey, AppData.defaultNoOfComment));
+        util = new Util();
+    }
+
     @Override
-    protected ArrayList<MediaDetails> doInBackground(String... params) {
+    protected Util doInBackground(String... params) {
         JSONArray jsonArray;
         if (params.length == 2) {
             try {
@@ -84,11 +95,13 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, ArrayList<Med
                 e.printStackTrace();
             }
         } else {
-            jsonArray = util.urlConnection(params[0]);
-            convertStringIntoJavaObject(jsonArray);
+            for (String string:nextUrlArrayList) {
+                jsonArray = util.urlConnection(string);
+                convertStringIntoJavaObject(jsonArray);
+            }
         }
 
-        return mediaDetailseslist;
+        return util;
     }
 
     private void convertStringIntoJavaObject(JSONArray data) {
@@ -160,11 +173,22 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, ArrayList<Med
         }
     }
 
-    @Override
-    protected void onPostExecute(ArrayList<MediaDetails> mediaDetailses) {
+   /* @Override
+    protected Void onPostExecute() {
         mCallBack.getMediaDetails(mediaDetailses);
+        ArrayList<String> st=util.getNextUrlArrayList();
+        Log.i("test", "Size of Array :" + st.size());
+        return  null;
+
     }
+*/
 
-
+    @Override
+    protected void onPostExecute(Util util) {
+        super.onPostExecute(util);
+        mCallBack.getMediaDetails(mediaDetailseslist,util);
+        ArrayList<String> st=util.getNextUrlArrayList();
+        Log.i("test", "Size of Array :" + st.size());
+    }
 }
 

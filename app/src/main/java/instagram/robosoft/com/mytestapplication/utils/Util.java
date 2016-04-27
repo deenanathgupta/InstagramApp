@@ -15,10 +15,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 
 import instagram.robosoft.com.mytestapplication.constant.AppData;
 import instagram.robosoft.com.mytestapplication.model.CommentDetails;
@@ -26,7 +29,8 @@ import instagram.robosoft.com.mytestapplication.model.CommentDetails;
 /**
  * Created by deena on 25/2/16.
  */
-public class Util {
+public class Util implements Serializable{
+    private ArrayList<String> nextUrlArrayList = new ArrayList<>();;
     private HttpURLConnection httpURLConnection;
 
     public Util() {
@@ -58,33 +62,37 @@ public class Util {
         }
         return false;
     }
-     public JSONArray urlConnection(String Url) {
-            String respose,nextUrl;
-            JSONArray data = null;URL url;
-            try {
-                url = new URL(Url);
-                httpURLConnection = (HttpURLConnection) url.openConnection();
-                respose = String.valueOf(Util.covertInputStreamToString(httpURLConnection.getInputStream()));
-                JSONObject jsonObject = (JSONObject) new JSONTokener(respose).nextValue();
-                if (jsonObject.has("pagination")) {
-                    JSONObject paginationJsonObject = jsonObject.getJSONObject("pagination");
-                    if (!paginationJsonObject.isNull("next_url")) {
-                        nextUrl = paginationJsonObject.getString("next_url");
-                    }
+
+    public JSONArray urlConnection(String Url) {
+        String respose, nextUrl;
+        JSONArray data = null;
+        URL url;
+        try {
+            url = new URL(Url);
+            httpURLConnection = (HttpURLConnection) url.openConnection();
+            respose = String.valueOf(Util.covertInputStreamToString(httpURLConnection.getInputStream()));
+            JSONObject jsonObject = (JSONObject) new JSONTokener(respose).nextValue();
+            if (jsonObject.has("pagination")) {
+                JSONObject paginationJsonObject = jsonObject.getJSONObject("pagination");
+                if (!paginationJsonObject.isNull("next_url")) {
+                    nextUrl = paginationJsonObject.getString("next_url");
+                    nextUrlArrayList.add(nextUrl);
+                    Log.i("test", nextUrl + "  " + nextUrlArrayList.size());
                 }
-                data = jsonObject.getJSONArray("data");
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (JSONException e) {
-                e.printStackTrace();
-            } finally {
-                if (httpURLConnection != null)
-                    httpURLConnection.disconnect();
             }
-            return data;
+            data = jsonObject.getJSONArray("data");
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        } finally {
+            if (httpURLConnection != null)
+                httpURLConnection.disconnect();
         }
+        return data;
+    }
 
     public ArrayList<CommentDetails> getCommentDetails(String mediaId, int mCommentCountDisplay) {
         CommentDetails commentDetails;
@@ -93,7 +101,7 @@ public class Util {
         int commentCount = mCommentCountDisplay;
         String recentComment = AppData.APIURL + "/media/" + mediaId + "/comments?access_token=" + AppData.accesstokn;
         try {
-            JSONArray data=urlConnection(recentComment);
+            JSONArray data = urlConnection(recentComment);
             if (commentCount > data.length())
                 count = data.length();
             else if (commentCount < data.length())
@@ -111,11 +119,15 @@ public class Util {
                     arrayList.add(commentDetails);
                 }
             }
-        }  catch (JSONException e) {
+        } catch (JSONException e) {
             e.printStackTrace();
         } finally {
             httpURLConnection.disconnect();
         }
         return arrayList;
+    }
+
+    public  ArrayList<String> getNextUrlArrayList() {
+        return nextUrlArrayList;
     }
 }

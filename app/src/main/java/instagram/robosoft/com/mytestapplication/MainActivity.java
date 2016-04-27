@@ -63,7 +63,7 @@ import instagram.robosoft.com.mytestapplication.model.CommentDetails;
 import instagram.robosoft.com.mytestapplication.model.MediaDetails;
 import instagram.robosoft.com.mytestapplication.utils.Util;
 
-public class MainActivity extends AppCompatActivity implements CallBack, MediaDetailsDataCommunicatior,CommentDetailsCallBack, View.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
+public class MainActivity extends AppCompatActivity implements CallBack, MediaDetailsDataCommunicatior, CommentDetailsCallBack, View.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
 
     private RecyclerView mRecyclerView;
     private SharedPreferences mSharedPreferences;
@@ -78,7 +78,12 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     private ArrayList<MediaDetails> mMediaDetailseslist = new ArrayList<>();
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private LinearLayoutManager mLinearLayoutManager;
+    private Util mUtil;
 
+    private ArrayList<String> nextUrlArrayList;
+    // Variables for scroll listener
+    private boolean mUserScrolled = true;
+    private int mPastVisiblesItems, mVisibleItemCount, mTotalItemCount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,6 +107,8 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
         } else {
             mMediaDetailseslist = savedInstanceState.getParcelableArrayList(AppData.SAVE_STATE_PARCELABLE_ARRAY_LIST);
             mUserdetails = savedInstanceState.getStringArray(AppData.USER_DETAILS_ARRAY);
+            nextUrlArrayList = savedInstanceState.getStringArrayList("nexturl");
+//            mUtil = savedInstanceState.getSerializable("util");
             if (mUserdetails[0] != null)
                 getSupportActionBar().setTitle(mUserdetails[0]);
             passDataToAdapter();
@@ -110,34 +117,69 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     }
 
     private void initializeView() {
-
         mLinearLayout = (LinearLayout) findViewById(R.id.linlaHeaderProgress);
-
         Toolbar toolbar = (Toolbar) findViewById(R.id.htab_toolbar);
         setSupportActionBar(toolbar);
-
         mAlertBuilder = new AlertDialog.Builder(this);
         mAlertBuilder.setTitle(R.string.setting);
         mAlertBuilder.setMessage(R.string.alertMessage);
-
         webView = (WebView) findViewById(R.id.webview);
         webView.setVerticalScrollBarEnabled(false);
         webView.setHorizontalScrollBarEnabled(false);
-
         mRecyclerView = (RecyclerView) findViewById(R.id.recyclerview);
         mRecyclerView.setHasFixedSize(true);
-
         mSharedPreferences = getSharedPreferences(AppData.SETTINGPREFRENCE, MODE_PRIVATE);
-
         mFloatingActionButton = (FloatingActionButton) findViewById(R.id.fab);
         mFloatingActionButton.setOnClickListener(this);
-
         mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayout);
         mSwipeRefreshLayout.setOnRefreshListener(this);
         mSwipeRefreshLayout.setColorSchemeColors(Color.RED, Color.GREEN, Color.BLUE, Color.CYAN);
-
+        implementScrollListener();
         mCoordinatorLayout = (CoordinatorLayout) findViewById(R.id
                 .coordinatorlayout);
+    }
+
+
+    private void implementScrollListener() {
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                if (newState == AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL) {
+                    mUserScrolled = true;
+                    Log.i("test", "onScrollStateChanged()");
+                }
+            }
+
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                // Log.i("test","onScrolled()");
+                if (dy > 0) {
+                    mVisibleItemCount = mLinearLayoutManager.getChildCount();
+                    mTotalItemCount = mLinearLayoutManager.getItemCount();
+                    mPastVisiblesItems = mLinearLayoutManager.findFirstVisibleItemPosition();
+                    if (mUserScrolled
+                            && (mVisibleItemCount + mPastVisiblesItems) == mTotalItemCount) {
+                        mUserScrolled = false;
+                        if (Util.isNwConnected(MainActivity.this) && mUtil != null) {
+                            nextUrlArrayList = mUtil.getNextUrlArrayList();
+                            Log.i("test", "OnScroll " + nextUrlArrayList.size());
+                            updateRecyclerView(nextUrlArrayList);
+                        }
+
+                    }
+
+                }
+            }
+        });
+    }
+
+    private void updateRecyclerView(ArrayList<String> nextUrlArrayList) {
+        Log.i("test", "onScrolled() " + nextUrlArrayList.size());
+        //for (String url : nextUrlArrayList) {
+            new MediaDetailsAsyncTask(nextUrlArrayList,MainActivity.this).execute();
+        //}
     }
 
     public void reloadConnection() {
@@ -163,6 +205,8 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
         super.onSaveInstanceState(outState);
         outState.putParcelableArrayList(AppData.SAVE_STATE_PARCELABLE_ARRAY_LIST, mMediaDetailseslist);
         outState.putStringArray(AppData.USER_DETAILS_ARRAY, mUserdetails);
+        outState.putStringArrayList("nexturl", nextUrlArrayList);
+        outState.putSerializable("util", mUtil);
     }
 
     @Override
@@ -175,8 +219,11 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     }
 
     @Override
-    public void getMediaDetails(ArrayList<MediaDetails> l) {
-        mMediaDetailseslist = l;
+    public void getMediaDetails(ArrayList<MediaDetails> l, Util util) {
+        //mMediaDetailseslist = l;
+        Log.i("test", "SizeofCallBack Array: " + l.size());
+        mMediaDetailseslist.addAll(l);
+        mUtil = util;
         passDataToAdapter();
         mSwipeRefreshLayout.setRefreshing(false);
     }
@@ -254,7 +301,7 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
                 if (input.trim().length() != 0) {
                     editor.putString(AppData.SettingKey, input);
                     editor.commit();
-                    new RequestForCommentAsyncTask(mMediaDetailseslist,MainActivity.this).execute();
+                    new RequestForCommentAsyncTask(mMediaDetailseslist, MainActivity.this).execute();
                 } else {
                     Snackbar.make(mCoordinatorLayout, R.string.snackBarMessageForEditText, Snackbar.LENGTH_LONG).show();
                 }
@@ -281,9 +328,9 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
 
     @Override
     public void commentDetails(ArrayList<ArrayList<CommentDetails>> commentArrayList) {
-        int indx=0;
-        for (ArrayList<CommentDetails> arrayList:commentArrayList){
-                mMediaDetailseslist.get(indx).setCommentDetailsArrayList(arrayList);
+        int indx = 0;
+        for (ArrayList<CommentDetails> arrayList : commentArrayList) {
+            mMediaDetailseslist.get(indx).setCommentDetailsArrayList(arrayList);
             indx++;
         }
         mRecyclerviewAdapter.notifyDataSetChanged();
