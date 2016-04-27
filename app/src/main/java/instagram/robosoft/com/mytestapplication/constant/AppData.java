@@ -4,7 +4,7 @@ package instagram.robosoft.com.mytestapplication.constant;
  * Created by deena on 24/2/16.
  */
 public class AppData {
-    public static final String DEFAULT_LOAD_DATA = "2";
+    public static final String DEFAULT_LOAD_DATA = "5";
     public static final String CLIENT_ID = "34ae8543c6214ca684eb28a2b63f233d";
     public static final String CLIENT_SECRET = "2d189f48a2c442fcbf5e7ba58364329c";
     public static final String accesstokn = "1792605782.34ae854.4533e192666a41bcaf546c6d8121c09f";

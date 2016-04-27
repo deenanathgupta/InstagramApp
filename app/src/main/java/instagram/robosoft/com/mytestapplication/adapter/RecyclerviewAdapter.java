@@ -112,7 +112,7 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
             }
 
         } else {
-            new ImageDownloader(holder.postImage, this).execute(mediaDetails.getMediaUrl());
+            new ImageDownloader(holder.postImage, this, mContext).execute(mediaDetails.getMediaUrl());
         }
 
 

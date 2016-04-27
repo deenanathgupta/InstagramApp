@@ -1,5 +1,6 @@
 package instagram.robosoft.com.mytestapplication.asynctask;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -37,7 +38,7 @@ import instagram.robosoft.com.mytestapplication.utils.Util;
  * Created by deena on 25/2/16.
  */
 public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Util> {
-    private HttpURLConnection httpURLConnection = null;
+    private Boolean mFlagg = false;
     private String mediaId[];
     private MediaDetails mediaDetails;
     private Context mContext;
@@ -50,14 +51,18 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Util> {
     private Util util;
     private ArrayList<String> nextUrlArrayList;
     private Boolean mFlag = false;
+    private ProgressDialog progressDialog;
+
 
     public MediaDetailsAsyncTask(Context mContext) {
+        mFlagg = true;
         this.mContext = mContext;
         mCallBack = (MediaDetailsDataCommunicatior) mContext;
         mediaDetailseslist = new ArrayList<>();
         mSharedPreference = mContext.getSharedPreferences(AppData.SETTINGPREFRENCE, mContext.MODE_PRIVATE);
         mCommentCountDisplay = Integer.parseInt(mSharedPreference.getString(AppData.SettingKey, AppData.defaultNoOfComment));
         util = new Util();
+        progressDialog=ProgressDialog.show(mContext,"","Loading...",true);
     }
 
     public MediaDetailsAsyncTask(ArrayList<String> nextUrlArrayList, Context mContext) {
@@ -68,12 +73,19 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Util> {
         mSharedPreference = mContext.getSharedPreferences(AppData.SETTINGPREFRENCE, mContext.MODE_PRIVATE);
         mCommentCountDisplay = Integer.parseInt(mSharedPreference.getString(AppData.SettingKey, AppData.defaultNoOfComment));
         util = new Util();
+        progressDialog=ProgressDialog.show(mContext,"","Loading...",true);
+    }
+
+    @Override
+    protected void onPreExecute() {
+        super.onPreExecute();
+        progressDialog.show();
     }
 
     @Override
     protected Util doInBackground(String... params) {
         JSONArray jsonArray;
-        if (params.length == 2) {
+        if (mFlagg) {
             mFlag = true;
             try {
                 jsonArray = util.urlConnection(params[0]);
@@ -180,7 +192,14 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Util> {
     @Override
     protected void onPostExecute(Util util) {
         super.onPostExecute(util);
-        mCallBack.getMediaDetails(mediaDetailseslist, util,mFlag);
+        mCallBack.getMediaDetails(mediaDetailseslist, util, mFlag);
+        progressDialog.dismiss();
+    }
+
+    @Override
+    protected void onCancelled() {
+        super.onCancelled();
+        progressDialog.dismiss();
     }
 }
 

@@ -58,6 +58,7 @@ public class RequestForCommentAsyncTask extends AsyncTask<String, CommentDetails
     protected void onPreExecute() {
         super.onPreExecute();
         progressBar=ProgressDialog.show(mContext,"","Loading...");
+
     }
 
     @Override

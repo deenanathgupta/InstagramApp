@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.os.AsyncTask;
@@ -79,17 +81,17 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private LinearLayoutManager mLinearLayoutManager;
     private Util mUtil;
-
     private ArrayList<String> nextUrlArrayList;
     // Variables for scroll listener
     private boolean mUserScrolled = true;
     private int mPastVisiblesItems, mVisibleItemCount, mTotalItemCount;
+    private int currentOrientation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        currentOrientation = getResources().getConfiguration().orientation;
         initializeView();
 
         if (!Util.isNwConnected(this)) {
@@ -99,6 +101,7 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
         }
         if (savedInstanceState == null) {
             if (Util.isNwConnected(this)) {
+                Util.lockOrientation(MainActivity.this);
                 giveUrlToWebView();
                 mLinearLayout.setVisibility(View.GONE);
             } else {
@@ -108,7 +111,7 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
             mMediaDetailseslist = savedInstanceState.getParcelableArrayList(AppData.SAVE_STATE_PARCELABLE_ARRAY_LIST);
             mUserdetails = savedInstanceState.getStringArray(AppData.USER_DETAILS_ARRAY);
             nextUrlArrayList = savedInstanceState.getStringArrayList("nexturl");
-//            mUtil = savedInstanceState.getSerializable("util");
+            mUtil = (Util) getLastCustomNonConfigurationInstance();
             if (mUserdetails[0] != null)
                 getSupportActionBar().setTitle(mUserdetails[0]);
             passDataToAdapter(true);
@@ -137,6 +140,7 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
         implementScrollListener();
         mCoordinatorLayout = (CoordinatorLayout) findViewById(R.id
                 .coordinatorlayout);
+
     }
 
 
@@ -164,7 +168,6 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
                         mUserScrolled = false;
                         if (Util.isNwConnected(MainActivity.this) && mUtil != null) {
                             nextUrlArrayList = mUtil.getNextUrlArrayList();
-                            Log.i("test", "OnScroll " + nextUrlArrayList.size());
                             updateRecyclerView(nextUrlArrayList);
                         }
 
@@ -176,6 +179,7 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     }
 
     private void updateRecyclerView(ArrayList<String> nextUrlArrayList) {
+        Util.lockOrientation(this);
         new MediaDetailsAsyncTask(nextUrlArrayList, MainActivity.this).execute();
     }
 
@@ -203,7 +207,6 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
         outState.putParcelableArrayList(AppData.SAVE_STATE_PARCELABLE_ARRAY_LIST, mMediaDetailseslist);
         outState.putStringArray(AppData.USER_DETAILS_ARRAY, mUserdetails);
         outState.putStringArrayList("nexturl", nextUrlArrayList);
-        outState.putSerializable("util", mUtil);
     }
 
     @Override
@@ -211,6 +214,7 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
         if (s[0] != null)
             getSupportActionBar().setTitle(s[0]);
         this.mUserdetails = s;
+        Util.lockOrientation(this);
         new MediaDetailsAsyncTask(this).execute(AppData.USER_INFORMATION, AppData.FOLLWERS);
         mLinearLayout.setVisibility(View.VISIBLE);
     }
@@ -218,19 +222,18 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     @Override
     public void getMediaDetails(ArrayList<MediaDetails> l, Util util, Boolean flag) {
         //mMediaDetailseslist = l;
-        Log.i("test", "SizeofCallBack Array: " + l.size());
         mMediaDetailseslist.addAll(l);
         passDataToAdapter(flag);
-
         mUtil = util;
         mSwipeRefreshLayout.setRefreshing(false);
+        Util.unLockOrientation(MainActivity.this);
     }
 
     private void passDataToAdapter(Boolean flag) {
         webView.setVisibility(View.GONE);
+        mRecyclerView.setVisibility(View.VISIBLE);
         if (flag) {
             mCommentCountDisplay = Integer.parseInt(mSharedPreferences.getString(AppData.SettingKey, AppData.defaultNoOfComment));
-            mRecyclerView.setVisibility(View.VISIBLE);
             mLinearLayoutManager = new LinearLayoutManager(this);
             mRecyclerView.setLayoutManager(mLinearLayoutManager);
             mRecyclerviewAdapter = new RecyclerviewAdapter(mMediaDetailseslist, this, mUserdetails[0], mCommentCountDisplay);
@@ -270,18 +273,22 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.profile:
-                Intent intent = new Intent(MainActivity.this, UserProfile.class);
-                Bundle bundle = new Bundle();
-                bundle.putStringArray(AppData.USERDETAILS, mUserdetails);
-                bundle.putParcelableArrayList(AppData.USER_COMMENT_DETAILS, mMediaDetailseslist);
-                intent.putExtras(bundle);
-                startActivity(intent);
+                profileActictivity();
                 break;
             case R.id.setting:
                 settingForComment();
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void profileActictivity() {
+        Intent intent = new Intent(MainActivity.this, UserProfile.class);
+        Bundle bundle = new Bundle();
+        bundle.putStringArray(AppData.USERDETAILS, mUserdetails);
+        bundle.putParcelableArrayList(AppData.USER_COMMENT_DETAILS, mMediaDetailseslist);
+        intent.putExtras(bundle);
+        startActivity(intent);
     }
 
     private void settingForComment() {
@@ -335,6 +342,11 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
             indx++;
         }
         mRecyclerviewAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public Object onRetainCustomNonConfigurationInstance() {
+        return mUtil;
     }
 }
 

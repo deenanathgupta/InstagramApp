@@ -8,6 +8,8 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.ImageView;
 
+import com.squareup.picasso.Picasso;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -23,11 +25,13 @@ public class ImageDownloader extends AsyncTask<String, Void, Bitmap> {
     private ImageView mImageView;
     private String Url;
     private ImageAsyncCallBack mImageAsyncCallBack;
+    private Context mContext;
 
 
-    public ImageDownloader(ImageView imageView,ImageAsyncCallBack context) {
+    public ImageDownloader(ImageView imageView, ImageAsyncCallBack imageAsyncCallBack, Context context) {
         this.mImageView = imageView;
-        mImageAsyncCallBack= context;
+        this.mContext = context;
+        mImageAsyncCallBack = imageAsyncCallBack;
     }
 
     @Override
@@ -53,9 +57,12 @@ public class ImageDownloader extends AsyncTask<String, Void, Bitmap> {
     @Override
     protected void onPostExecute(Bitmap bitmap) {
         super.onPostExecute(bitmap);
-        Bitmap bitmapImage=Bitmap.createScaledBitmap(bitmap,760,480,true);
+        Bitmap bitmapImage = Bitmap.createScaledBitmap(bitmap, 760, 480, true);
         mImageView.setImageBitmap(bitmapImage);
         mImageAsyncCallBack.processFinish(bitmap, Url);
+        if (bitmapImage != bitmap)
+            bitmap.recycle();
     }
+
 }
 

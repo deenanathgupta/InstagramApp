@@ -1,7 +1,10 @@
 package instagram.robosoft.com.mytestapplication.utils;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.util.Log;
@@ -29,7 +32,7 @@ import instagram.robosoft.com.mytestapplication.model.CommentDetails;
 /**
  * Created by deena on 25/2/16.
  */
-public class Util implements Serializable {
+public class Util {
     private ArrayList<String> nextUrlArrayList = new ArrayList<>();
     ;
     private HttpURLConnection httpURLConnection;
@@ -78,7 +81,6 @@ public class Util implements Serializable {
                 if (!paginationJsonObject.isNull("next_url")) {
                     nextUrl = paginationJsonObject.getString("next_url");
                     nextUrlArrayList.add(nextUrl);
-                    Log.i("test", nextUrl + "  " + nextUrlArrayList.size());
                 }
             }
             data = jsonObject.getJSONArray("data");
@@ -130,5 +132,18 @@ public class Util implements Serializable {
 
     public ArrayList<String> getNextUrlArrayList() {
         return nextUrlArrayList;
+    }
+
+    public static void lockOrientation(Activity mActivity) {
+        int currentOrienttion = mActivity.getResources().getConfiguration().orientation;
+        if (currentOrienttion == Configuration.ORIENTATION_PORTRAIT) {
+            mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        } else {
+            mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        }
+    }
+
+    public static void unLockOrientation(Activity mActivity) {
+        mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
     }
 }
