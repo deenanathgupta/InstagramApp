@@ -1,17 +1,12 @@
 package instagram.robosoft.com.mytestapplication;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.ActivityInfo;
-import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Rect;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -28,31 +23,14 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
-import android.webkit.WebChromeClient;
-import android.webkit.WebResourceError;
-import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.widget.AbsListView;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONTokener;
-
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Map;
 
 import instagram.robosoft.com.mytestapplication.adapter.RecyclerviewAdapter;
 import instagram.robosoft.com.mytestapplication.asynctask.MediaDetailsAsyncTask;
@@ -86,6 +64,7 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     private boolean mUserScrolled = true;
     private int mPastVisiblesItems, mVisibleItemCount, mTotalItemCount;
     private int currentOrientation;
+    private Boolean mFlag = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,18 +72,13 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
         setContentView(R.layout.activity_main);
         currentOrientation = getResources().getConfiguration().orientation;
         initializeView();
-
-        if (!Util.isNwConnected(this)) {
-            mFloatingActionButton.show();
-        } else {
-            mFloatingActionButton.hide();
-        }
         if (savedInstanceState == null) {
             if (Util.isNwConnected(this)) {
                 Util.lockOrientation(MainActivity.this);
                 giveUrlToWebView();
                 mLinearLayout.setVisibility(View.GONE);
             } else {
+                Log.i("test", "Else Reload");
                 reloadConnection();
             }
         } else {
@@ -215,14 +189,15 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
             getSupportActionBar().setTitle(s[0]);
         this.mUserdetails = s;
         Util.lockOrientation(this);
-        new MediaDetailsAsyncTask(this).execute(AppData.USER_INFORMATION, AppData.FOLLWERS);
+        new MediaDetailsAsyncTask(this, true).execute(AppData.USER_INFORMATION, AppData.FOLLWERS);
         mLinearLayout.setVisibility(View.VISIBLE);
     }
 
     @Override
     public void getMediaDetails(ArrayList<MediaDetails> l, Util util, Boolean flag) {
-        //mMediaDetailseslist = l;
+        mFlag = false;
         mMediaDetailseslist.addAll(l);
+        Log.i("test", "Media Side Inside IF :" + mMediaDetailseslist.size());
         passDataToAdapter(flag);
         mUtil = util;
         mSwipeRefreshLayout.setRefreshing(false);
@@ -331,7 +306,9 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
 
     @Override
     public void onRefresh() {
-        new MediaDetailsAsyncTask(this).execute(AppData.USER_INFORMATION, AppData.FOLLWERS);
+        mFlag = true;
+        mMediaDetailseslist.clear();
+        new MediaDetailsAsyncTask(this, false).execute(AppData.USERT_INFORMATION_ONSWIPE, AppData.FOLLWERS);
     }
 
     @Override

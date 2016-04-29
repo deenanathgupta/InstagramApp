@@ -44,47 +44,53 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Util> {
     private Context mContext;
     private ArrayList<MediaDetails> mediaDetailseslist;
     private MediaDetailsDataCommunicatior mCallBack;
-    private String nextUrl;
-    private URL url;
     private SharedPreferences mSharedPreference;
     private int mCommentCountDisplay;
     private Util util;
     private ArrayList<String> nextUrlArrayList;
-    private Boolean mFlag = false;
-    private ProgressDialog progressDialog;
+    private Boolean mFlag = false, mFlagFromMainActivity;
+    private int x = 0;
+    //private ProgressDialog progressDialog;
 
 
-    public MediaDetailsAsyncTask(Context mContext) {
+    public MediaDetailsAsyncTask(Context mContext, Boolean mFlag) {
         mFlagg = true;
+        mFlagFromMainActivity = mFlag;
         this.mContext = mContext;
         mCallBack = (MediaDetailsDataCommunicatior) mContext;
         mediaDetailseslist = new ArrayList<>();
         mSharedPreference = mContext.getSharedPreferences(AppData.SETTINGPREFRENCE, mContext.MODE_PRIVATE);
         mCommentCountDisplay = Integer.parseInt(mSharedPreference.getString(AppData.SettingKey, AppData.defaultNoOfComment));
         util = new Util();
-        progressDialog=ProgressDialog.show(mContext,"","Loading...",true);
+        Log.i("test", "Inside MediaDetailsAsyncTask(1 Parameter)");
+        //progressDialog = ProgressDialog.show(mContext, "", "Loading...", true);
     }
 
     public MediaDetailsAsyncTask(ArrayList<String> nextUrlArrayList, Context mContext) {
         this.nextUrlArrayList = nextUrlArrayList;
+        x = 1;
+        Log.i("test", "Inside MediaDetailsAsyncTask(2 Parameter)");
         this.mContext = mContext;
         mCallBack = (MediaDetailsDataCommunicatior) mContext;
         mediaDetailseslist = new ArrayList<>();
         mSharedPreference = mContext.getSharedPreferences(AppData.SETTINGPREFRENCE, mContext.MODE_PRIVATE);
         mCommentCountDisplay = Integer.parseInt(mSharedPreference.getString(AppData.SettingKey, AppData.defaultNoOfComment));
         util = new Util();
-        progressDialog=ProgressDialog.show(mContext,"","Loading...",true);
+        //progressDialog = ProgressDialog.show(mContext, "", "Loading...", true);
     }
 
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        progressDialog.show();
+        //progressDialog.show();
     }
 
     @Override
     protected Util doInBackground(String... params) {
         JSONArray jsonArray;
+        if (isCancelled()) {
+            // progressDialog.dismiss();
+        }
         if (mFlagg) {
             mFlag = true;
             try {
@@ -99,7 +105,11 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Util> {
                     }
                     //get media details json data of followers
                     for (int i = 0; i < follwerId.length; i++) {
-                        String media = AppData.APIURL + "/users/" + follwerId[i] + "/media/recent/?access_token=" + AppData.accesstokn + "&count=" + AppData.DEFAULT_LOAD_DATA;
+                        String media = "";
+                        if (mFlagFromMainActivity)
+                            media = AppData.APIURL + "/users/" + follwerId[i] + "/media/recent/?access_token=" + AppData.accesstokn + "&count=" + AppData.DEFAULT_LOAD_DATA;
+                        else
+                        media = AppData.APIURL + "/users/" + follwerId[i] + "/media/recent/?access_token=" + AppData.accesstokn;
                         jsonArray = util.urlConnection(media);
                         convertStringIntoJavaObject(jsonArray);
                     }
@@ -191,15 +201,11 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Util> {
 
     @Override
     protected void onPostExecute(Util util) {
-        super.onPostExecute(util);
+        //progressDialog.dismiss();
         mCallBack.getMediaDetails(mediaDetailseslist, util, mFlag);
-        progressDialog.dismiss();
+
+
     }
 
-    @Override
-    protected void onCancelled() {
-        super.onCancelled();
-        progressDialog.dismiss();
-    }
 }
 

@@ -32,7 +32,7 @@ import instagram.robosoft.com.mytestapplication.utils.Util;
 /**
  * Created by deena on 29/2/16.
  */
-public class RequestForCommentAsyncTask extends AsyncTask<String, CommentDetails, ArrayList<ArrayList<CommentDetails>>> {
+public class RequestForCommentAsyncTask extends  AsyncTask<String, CommentDetails, ArrayList<ArrayList<CommentDetails>>> {
     private SharedPreferences mSharedPreferences;
     private ArrayList<MediaDetails> mediaDetailses;
     int mCommentCountDisplay;
@@ -57,7 +57,7 @@ public class RequestForCommentAsyncTask extends AsyncTask<String, CommentDetails
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        progressBar=ProgressDialog.show(mContext,"","Loading...");
+        progressBar = ProgressDialog.show(mContext, "", "Loading...");
 
     }
 
@@ -67,8 +67,8 @@ public class RequestForCommentAsyncTask extends AsyncTask<String, CommentDetails
             ArrayList<CommentDetails> arrayList = util.getCommentDetails(mediaDetails.getMediaId(), mCommentCountDisplay);
             commentArrayList.add(arrayList);
         }
-
-
+        if (isCancelled())
+            progressBar.dismiss();
         return commentArrayList;
     }
 
