@@ -24,6 +24,7 @@ public class UserProfile extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_profile);
+
         txtTotalPosts = (TextView) findViewById(R.id.txttotalposts);
         txtTotalFollwers = (TextView) findViewById(R.id.txttotalfollwers);
         txtTotalFollowing = (TextView) findViewById(R.id.txttotalfollowing);

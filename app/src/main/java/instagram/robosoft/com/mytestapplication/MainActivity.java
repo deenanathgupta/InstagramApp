@@ -1,5 +1,6 @@
 package instagram.robosoft.com.mytestapplication;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -52,7 +53,6 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     private RecyclerviewAdapter mRecyclerviewAdapter;
     private FloatingActionButton mFloatingActionButton;
     private CoordinatorLayout mCoordinatorLayout;
-    private LinearLayout mLinearLayout;
     private int mCommentCountDisplay = 0;
     private String[] mUserdetails;
     private ArrayList<MediaDetails> mMediaDetailseslist = new ArrayList<>();
@@ -65,6 +65,7 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     private int mPastVisiblesItems, mVisibleItemCount, mTotalItemCount;
     private int currentOrientation;
     private Boolean mFlag = false;
+    private ProgressDialog mProgressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,9 +77,8 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
             if (Util.isNwConnected(this)) {
                 Util.lockOrientation(MainActivity.this);
                 giveUrlToWebView();
-                mLinearLayout.setVisibility(View.GONE);
+                mFloatingActionButton.setVisibility(View.GONE);
             } else {
-                Log.i("test", "Else Reload");
                 reloadConnection();
             }
         } else {
@@ -89,12 +89,16 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
             if (mUserdetails[0] != null)
                 getSupportActionBar().setTitle(mUserdetails[0]);
             passDataToAdapter(true);
+            mFloatingActionButton.setVisibility(View.GONE);
         }
 
     }
 
     private void initializeView() {
-        mLinearLayout = (LinearLayout) findViewById(R.id.linlaHeaderProgress);
+
+        mProgressDialog = new ProgressDialog(this);
+        mProgressDialog.setCancelable(false);
+        mProgressDialog.setMessage("Loading...");
         Toolbar toolbar = (Toolbar) findViewById(R.id.htab_toolbar);
         setSupportActionBar(toolbar);
         mAlertBuilder = new AlertDialog.Builder(this);
@@ -125,7 +129,6 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
                 super.onScrollStateChanged(recyclerView, newState);
                 if (newState == AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL) {
                     mUserScrolled = true;
-                    //Log.i("test", "onScrollStateChanged()");
                 }
             }
 
@@ -143,6 +146,7 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
                         if (Util.isNwConnected(MainActivity.this) && mUtil != null) {
                             nextUrlArrayList = mUtil.getNextUrlArrayList();
                             updateRecyclerView(nextUrlArrayList);
+                            mProgressDialog.show();
                         }
 
                     }
@@ -185,12 +189,13 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
 
     @Override
     public void getData(String s[]) {
+        mProgressDialog.show();
         if (s[0] != null)
             getSupportActionBar().setTitle(s[0]);
         this.mUserdetails = s;
         Util.lockOrientation(this);
         new MediaDetailsAsyncTask(this, true).execute(AppData.USER_INFORMATION, AppData.FOLLWERS);
-        mLinearLayout.setVisibility(View.VISIBLE);
+        mProgressDialog.show();
     }
 
     @Override
@@ -216,8 +221,7 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
         } else {
             mRecyclerviewAdapter.notifyDataSetChanged();
         }
-
-        mLinearLayout.setVisibility(View.GONE);
+        mProgressDialog.dismiss();
     }
 
     @Override
@@ -261,9 +265,10 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
         Intent intent = new Intent(MainActivity.this, UserProfile.class);
         Bundle bundle = new Bundle();
         bundle.putStringArray(AppData.USERDETAILS, mUserdetails);
-        bundle.putParcelableArrayList(AppData.USER_COMMENT_DETAILS, mMediaDetailseslist);
+        //bundle.putParcelableArrayList(AppData.USER_COMMENT_DETAILS, mMediaDetailseslist);
         intent.putExtras(bundle);
         startActivity(intent);
+        overridePendingTransition(R.anim.right_in, R.anim.left_out);
     }
 
     private void settingForComment() {
@@ -307,8 +312,14 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     @Override
     public void onRefresh() {
         mFlag = true;
-        mMediaDetailseslist.clear();
-        new MediaDetailsAsyncTask(this, false).execute(AppData.USERT_INFORMATION_ONSWIPE, AppData.FOLLWERS);
+        if (Util.isNwConnected(this)) {
+            mMediaDetailseslist.clear();
+            new MediaDetailsAsyncTask(this, false).execute(AppData.USERT_INFORMATION_ONSWIPE, AppData.FOLLWERS);
+        } else {
+            mFloatingActionButton.show();
+            reloadConnection();
+            mSwipeRefreshLayout.setRefreshing(false);
+        }
     }
 
     @Override
