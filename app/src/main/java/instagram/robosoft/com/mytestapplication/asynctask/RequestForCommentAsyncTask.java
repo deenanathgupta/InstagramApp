@@ -39,26 +39,17 @@ public class RequestForCommentAsyncTask extends  AsyncTask<String, CommentDetail
     private ArrayList<ArrayList<CommentDetails>> commentArrayList;
     private CommentDetailsCallBack commentDetailsCallBack;
     private Util util;
-    private ProgressDialog progressBar;
     private Context mContext;
 
 
-    public RequestForCommentAsyncTask(ArrayList<MediaDetails> mediaDetailses, Context mContext) {
+    public RequestForCommentAsyncTask(ArrayList<MediaDetails> mediaDetailses, Context context) {
         this.mediaDetailses = mediaDetailses;
-        this.mContext = mContext;
+        this.mContext = context;
         mSharedPreferences = mContext.getSharedPreferences(AppData.SETTINGPREFRENCE, mContext.MODE_PRIVATE);
         mCommentCountDisplay = Integer.parseInt(mSharedPreferences.getString(AppData.SettingKey, AppData.defaultNoOfComment));
         commentArrayList = new ArrayList<>();
         commentDetailsCallBack = (CommentDetailsCallBack) mContext;
         util = new Util();
-        progressBar = new ProgressDialog(mContext);
-    }
-
-    @Override
-    protected void onPreExecute() {
-        super.onPreExecute();
-        progressBar = ProgressDialog.show(mContext, "", "Loading...");
-
     }
 
     @Override
@@ -67,8 +58,6 @@ public class RequestForCommentAsyncTask extends  AsyncTask<String, CommentDetail
             ArrayList<CommentDetails> arrayList = util.getCommentDetails(mediaDetails.getMediaId(), mCommentCountDisplay);
             commentArrayList.add(arrayList);
         }
-        if (isCancelled())
-            progressBar.dismiss();
         return commentArrayList;
     }
 
@@ -76,7 +65,6 @@ public class RequestForCommentAsyncTask extends  AsyncTask<String, CommentDetail
     protected void onPostExecute(ArrayList<ArrayList<CommentDetails>> arrayLists) {
         super.onPostExecute(arrayLists);
         commentDetailsCallBack.commentDetails(arrayLists);
-        progressBar.dismiss();
     }
 
 }

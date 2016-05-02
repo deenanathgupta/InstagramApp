@@ -19,6 +19,7 @@ public class UserProfile extends AppCompatActivity {
     private ImageView mUserProfilePic;
     private String[] mUserDetails;
     private Bitmap mBitmap;
+    private Boolean mFlag = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,20 +33,22 @@ public class UserProfile extends AppCompatActivity {
         mUserProfilePic = (ImageView) findViewById(R.id.userimage);
 
         if (savedInstanceState != null) {
+            mFlag = true;
             mUserDetails = savedInstanceState.getStringArray(AppData.USER_PROFILE_DETAILS);
         } else {
             Intent intent = getIntent();
+            mFlag = true;
             mUserDetails = intent.getStringArrayExtra(AppData.USERDETAILS);
-
         }
-        txtUserName.setText(mUserDetails[0]);
-
-        Picasso.with(this).load(mUserDetails[1]).into(mUserProfilePic);
+        if (!mUserDetails.equals(null)) {
+            txtUserName.setText(mUserDetails[0]);
+            Picasso.with(this).load(mUserDetails[1]).into(mUserProfilePic);
+        }
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        outState.putStringArray(AppData.USER_PROFILE_DETAILS, mUserDetails);
         super.onSaveInstanceState(outState);
+        outState.putStringArray(AppData.USER_PROFILE_DETAILS, mUserDetails);
     }
 }

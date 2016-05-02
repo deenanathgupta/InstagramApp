@@ -194,7 +194,7 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
             getSupportActionBar().setTitle(s[0]);
         this.mUserdetails = s;
         Util.lockOrientation(this);
-        new MediaDetailsAsyncTask(this, true).execute(AppData.USER_INFORMATION, AppData.FOLLWERS);
+        new MediaDetailsAsyncTask(this, true).execute(AppData.USER_INFORMATION + AppData.DEFAULT_LOAD_DATA, AppData.FOLLWERS);
         mProgressDialog.show();
     }
 
@@ -313,8 +313,10 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     public void onRefresh() {
         mFlag = true;
         if (Util.isNwConnected(this)) {
-            mMediaDetailseslist.clear();
-            new MediaDetailsAsyncTask(this, false).execute(AppData.USERT_INFORMATION_ONSWIPE, AppData.FOLLWERS);
+            //mMediaDetailseslist.clear();
+            mUtil.lockOrientation(this);
+            //new MediaDetailsAsyncTask(this, false).execute(AppData.USERT_INFORMATION_ONSWIPE, AppData.FOLLWERS);
+            new RequestForCommentAsyncTask(mMediaDetailseslist, this).execute();
         } else {
             mFloatingActionButton.show();
             reloadConnection();
@@ -330,6 +332,8 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
             indx++;
         }
         mRecyclerviewAdapter.notifyDataSetChanged();
+        mSwipeRefreshLayout.setRefreshing(false);
+        Util.unLockOrientation(this);
     }
 
     @Override

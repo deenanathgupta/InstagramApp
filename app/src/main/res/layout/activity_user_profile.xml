@@ -14,7 +14,7 @@
         android:layout_marginTop="23dp"
         android:paddingLeft="@dimen/circularimagepaddingleft"
         android:paddingRight="@dimen/activity_horizontal_margin"
-        android:src="@drawable/imag2" />
+        android:src="@drawable/placeholder" />
 
     <LinearLayout
         android:id="@+id/innerlayout"

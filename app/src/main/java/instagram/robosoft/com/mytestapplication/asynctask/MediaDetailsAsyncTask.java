@@ -53,17 +53,13 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Util> {
     //private ProgressDialog progressDialog;
 
 
-    public MediaDetailsAsyncTask(Context mContext, Boolean mFlag) {
+    public MediaDetailsAsyncTask(Context mContext, Boolean flag) {
         mFlagg = true;
-        mFlagFromMainActivity = mFlag;
+        mFlagFromMainActivity = flag;
         this.mContext = mContext;
         mCallBack = (MediaDetailsDataCommunicatior) mContext;
         mediaDetailseslist = new ArrayList<>();
-        mSharedPreference = mContext.getSharedPreferences(AppData.SETTINGPREFRENCE, mContext.MODE_PRIVATE);
-        mCommentCountDisplay = Integer.parseInt(mSharedPreference.getString(AppData.SettingKey, AppData.defaultNoOfComment));
-        util = new Util();
-        Log.i("test", "Inside MediaDetailsAsyncTask(1 Parameter)");
-        //progressDialog = ProgressDialog.show(mContext, "", "Loading...", true);
+        getSharedValue();
     }
 
     public MediaDetailsAsyncTask(ArrayList<String> nextUrlArrayList, Context mContext) {
@@ -73,16 +69,13 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Util> {
         this.mContext = mContext;
         mCallBack = (MediaDetailsDataCommunicatior) mContext;
         mediaDetailseslist = new ArrayList<>();
+        getSharedValue();
+    }
+
+    private void getSharedValue() {
         mSharedPreference = mContext.getSharedPreferences(AppData.SETTINGPREFRENCE, mContext.MODE_PRIVATE);
         mCommentCountDisplay = Integer.parseInt(mSharedPreference.getString(AppData.SettingKey, AppData.defaultNoOfComment));
         util = new Util();
-        //progressDialog = ProgressDialog.show(mContext, "", "Loading...", true);
-    }
-
-    @Override
-    protected void onPreExecute() {
-        super.onPreExecute();
-        //progressDialog.show();
     }
 
     @Override
@@ -109,7 +102,7 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Util> {
                         if (mFlagFromMainActivity)
                             media = AppData.APIURL + "/users/" + follwerId[i] + "/media/recent/?access_token=" + AppData.accesstokn + "&count=" + AppData.DEFAULT_LOAD_DATA;
                         else
-                        media = AppData.APIURL + "/users/" + follwerId[i] + "/media/recent/?access_token=" + AppData.accesstokn;
+                            media = AppData.APIURL + "/users/" + follwerId[i] + "/media/recent/?access_token=" + AppData.accesstokn;
                         jsonArray = util.urlConnection(media);
                         convertStringIntoJavaObject(jsonArray);
                     }

@@ -13,7 +13,7 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="23dp"
         android:paddingLeft="@dimen/circularimagepaddingleft"
-        android:src="@drawable/imag2" />
+        android:src="@drawable/placeholder" />
 
     <LinearLayout
         android:id="@+id/innerlayout"
