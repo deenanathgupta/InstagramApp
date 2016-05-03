@@ -84,17 +84,19 @@
                 android:orientation="horizontal"
                 android:weightSum="6">
 
-                <TextView
-                    android:id="@+id/like"
-                    android:layout_width="0dp"
-                    android:layout_weight="1.5"
+
+                <ImageView
+                    android:id="@+id/likeIcon"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:src="@drawable/like50"
+                    android:paddingRight="16dp"
                     android:layout_alignParentStart="true"
                     android:textAlignment="viewEnd"
                     android:layout_below="@+id/imgpost"
+                    android:clickable="true"
                     android:paddingLeft="@dimen/postImagePadding"
-                    android:text="@string/totalLike"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    />
 
                 <TextView
                     android:id="@+id/txttotalnooflike"
@@ -154,6 +156,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/container"
+                android:orientation="horizontal"
                 android:weightSum="2">
 
                 <android.support.design.widget.TextInputLayout
@@ -170,12 +173,15 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentStart="true"
                         android:layout_marginBottom="5dp"
-                        android:hint="Your Comments.." />
+                        android:hint="Add a comment..." />
 
                 </android.support.design.widget.TextInputLayout>
 
 
                 <ImageView
+                    android:layout_marginTop="@dimen/sendImageTopMargin"
+                    android:padding="10dp"
+                    android:backgroundTint="@android:color/holo_blue_bright"
                     android:id="@+id/imageView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

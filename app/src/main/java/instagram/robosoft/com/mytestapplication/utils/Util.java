@@ -78,6 +78,7 @@ public class Util {
             url = new URL(Url);
             httpURLConnection = (HttpURLConnection) url.openConnection();
             respose = String.valueOf(Util.covertInputStreamToString(httpURLConnection.getInputStream()));
+            //Log.i("test", Url);
             JSONObject jsonObject = (JSONObject) new JSONTokener(respose).nextValue();
             if (jsonObject.has("pagination")) {
                 JSONObject paginationJsonObject = jsonObject.getJSONObject("pagination");

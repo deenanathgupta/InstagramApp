@@ -18,8 +18,7 @@ public class UserProfile extends AppCompatActivity {
     private TextView txtTotalPosts, txtTotalFollwers, txtTotalFollowing, txtUserName;
     private ImageView mUserProfilePic;
     private String[] mUserDetails;
-    private Bitmap mBitmap;
-    private Boolean mFlag = false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,23 +31,21 @@ public class UserProfile extends AppCompatActivity {
         txtUserName = (TextView) findViewById(R.id.txtuserName);
         mUserProfilePic = (ImageView) findViewById(R.id.userimage);
 
-        if (savedInstanceState != null) {
-            mFlag = true;
+        /*if (savedInstanceState != null) {
             mUserDetails = savedInstanceState.getStringArray(AppData.USER_PROFILE_DETAILS);
         } else {
             Intent intent = getIntent();
-            mFlag = true;
             mUserDetails = intent.getStringArrayExtra(AppData.USERDETAILS);
         }
         if (!mUserDetails.equals(null)) {
             txtUserName.setText(mUserDetails[0]);
             Picasso.with(this).load(mUserDetails[1]).into(mUserProfilePic);
-        }
+        }*/
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putStringArray(AppData.USER_PROFILE_DETAILS, mUserDetails);
+        //outState.putStringArray(AppData.USER_PROFILE_DETAILS, mUserDetails);
     }
 }

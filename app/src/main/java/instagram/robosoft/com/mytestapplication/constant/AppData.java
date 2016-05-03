@@ -18,10 +18,10 @@ public class AppData {
     public static final String tokenURLString = TOKENURL + "?client_id=" + CLIENT_ID + "&client_secret=" + CLIENT_SECRET + "&redirect_uri=" + CALLBACKURL + "&grant_type=authorization_code";
 
     public static final String USER_INFORMATION = APIURL + "/users/" + 1792605782 + "/media/recent/?access_token=" + accesstokn + "&count=";
-    public static final String USERT_INFORMATION_ONSWIPE=APIURL + "/users/" + 1792605782 + "/media/recent/?access_token=" + accesstokn;
+    public static final String USERT_INFORMATION_ONSWIPE = APIURL + "/users/" + 1792605782 + "/media/recent/?access_token=" + accesstokn;
 
-    public static final String FOLLWERS = "https://api.instagram.com/v1/users/self/follows?access_token=" + accesstokn;
-
+    public static final String FOLLWERS = APIURL + "/users/self/follows?access_token=" + accesstokn;
+    public static final String USERDETAILSURL = APIURL + "/users/self/media/recent/?access_token=" + accesstokn;
     public static final String MYPREFERENCE = "Data";
     public static final String SETTINGPREFRENCE = "SettingData";
     public static final String Name = "name";

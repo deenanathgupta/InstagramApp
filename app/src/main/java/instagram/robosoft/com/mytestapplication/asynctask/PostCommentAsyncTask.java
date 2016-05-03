@@ -19,9 +19,11 @@ import instagram.robosoft.com.mytestapplication.constant.AppData;
 public class PostCommentAsyncTask extends AsyncTask<String, Void, Void> {
     HttpURLConnection mHttpURLConnection = null;
     private String mCommentText;
+    private Boolean mFlag = false;
 
-    public PostCommentAsyncTask(String mCommentText) {
+    public PostCommentAsyncTask(String mCommentText, Boolean mFlag) {
         this.mCommentText = mCommentText;
+        this.mFlag = mFlag;
     }
 
     @Override
@@ -36,7 +38,10 @@ public class PostCommentAsyncTask extends AsyncTask<String, Void, Void> {
 
             OutputStream os = mHttpURLConnection.getOutputStream();
             BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
-            bufferedWriter.write("&access_token=" + AppData.accesstokn + "&text=" + mCommentText);
+            if (mFlag)
+                bufferedWriter.write("&access_token=" + AppData.accesstokn + "&text=" + mCommentText);
+            else
+                bufferedWriter.write("&access_token=" + AppData.accesstokn + "&likes");
             bufferedWriter.flush();
             bufferedWriter.close();
             os.close();

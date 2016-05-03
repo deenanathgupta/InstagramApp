@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import instagram.robosoft.com.mytestapplication.adapter.RecyclerviewAdapter;
 import instagram.robosoft.com.mytestapplication.asynctask.MediaDetailsAsyncTask;
 import instagram.robosoft.com.mytestapplication.asynctask.RequestForCommentAsyncTask;
+import instagram.robosoft.com.mytestapplication.asynctask.UserDetailAsyncTask;
 import instagram.robosoft.com.mytestapplication.communicator.CallBack;
 import instagram.robosoft.com.mytestapplication.communicator.CommentDetailsCallBack;
 import instagram.robosoft.com.mytestapplication.communicator.MediaDetailsDataCommunicatior;
@@ -66,6 +67,7 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     private int currentOrientation;
     private Boolean mFlag = false;
     private ProgressDialog mProgressDialog;
+    private String mUserDetail[];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +88,7 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
             mUserdetails = savedInstanceState.getStringArray(AppData.USER_DETAILS_ARRAY);
             nextUrlArrayList = savedInstanceState.getStringArrayList("nexturl");
             mUtil = (Util) getLastCustomNonConfigurationInstance();
+            mUserDetail = savedInstanceState.getStringArray("userdetail");
             if (mUserdetails[0] != null)
                 getSupportActionBar().setTitle(mUserdetails[0]);
             passDataToAdapter(true);
@@ -135,23 +138,20 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-                // Log.i("test","onScrolled()");
-                if (dy > 0) {
-                    mVisibleItemCount = mLinearLayoutManager.getChildCount();
-                    mTotalItemCount = mLinearLayoutManager.getItemCount();
-                    mPastVisiblesItems = mLinearLayoutManager.findFirstVisibleItemPosition();
-                    if (mUserScrolled
-                            && (mVisibleItemCount + mPastVisiblesItems) == mTotalItemCount) {
-                        mUserScrolled = false;
-                        if (Util.isNwConnected(MainActivity.this) && mUtil != null) {
-                            nextUrlArrayList = mUtil.getNextUrlArrayList();
-                            updateRecyclerView(nextUrlArrayList);
-                            mProgressDialog.show();
-                        }
-
+                mVisibleItemCount = mLinearLayoutManager.getChildCount();
+                mTotalItemCount = mLinearLayoutManager.getItemCount();
+                mPastVisiblesItems = mLinearLayoutManager.findFirstVisibleItemPosition();
+                if (mUserScrolled
+                        && (mVisibleItemCount + mPastVisiblesItems) == mTotalItemCount) {
+                    mUserScrolled = false;
+                    if (Util.isNwConnected(MainActivity.this) && mUtil != null) {
+                        nextUrlArrayList = mUtil.getNextUrlArrayList();
+                        updateRecyclerView(nextUrlArrayList);
+                        mProgressDialog.show();
                     }
 
                 }
+
             }
         });
     }
@@ -185,11 +185,13 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
         outState.putParcelableArrayList(AppData.SAVE_STATE_PARCELABLE_ARRAY_LIST, mMediaDetailseslist);
         outState.putStringArray(AppData.USER_DETAILS_ARRAY, mUserdetails);
         outState.putStringArrayList("nexturl", nextUrlArrayList);
+        outState.putStringArray("userdetail", mUserDetail);
     }
 
     @Override
     public void getData(String s[]) {
         mProgressDialog.show();
+        mUserDetail = s;
         if (s[0] != null)
             getSupportActionBar().setTitle(s[0]);
         this.mUserdetails = s;
@@ -253,6 +255,7 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
         switch (item.getItemId()) {
             case R.id.profile:
                 profileActictivity();
+                new UserDetailAsyncTask(this).execute("https://api.instagram.com/v1/users/" + mUserDetail[2] + "/?access_token=" + AppData.accesstokn);
                 break;
             case R.id.setting:
                 settingForComment();
@@ -340,6 +343,7 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     public Object onRetainCustomNonConfigurationInstance() {
         return mUtil;
     }
+
 }
 
 

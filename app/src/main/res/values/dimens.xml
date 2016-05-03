@@ -14,4 +14,5 @@
     <dimen name="userprofileImage">200dp</dimen>
     <dimen name="userprofileImageland">120dp</dimen>
     <dimen name="textpadding">4dp</dimen>
+    <dimen name="sendImageTopMargin">20dp</dimen>
 </resources>

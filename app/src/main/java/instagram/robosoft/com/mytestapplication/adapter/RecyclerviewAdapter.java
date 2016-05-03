@@ -1,8 +1,10 @@
 package instagram.robosoft.com.mytestapplication.adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.support.design.widget.Snackbar;
@@ -29,12 +31,14 @@ import org.json.JSONTokener;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.InterfaceAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 import instagram.robosoft.com.mytestapplication.MainActivity;
 import instagram.robosoft.com.mytestapplication.R;
@@ -83,19 +87,49 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
     }
 
     @Override
-    public void onBindViewHolder(final ViewHolder holder, int position) {
+    public void onBindViewHolder(final ViewHolder holder, final int position) {
         mViewHolder = holder;
-        MediaDetails mediaDetails = mediaDetailseslist.get(position);
-        Bitmap bMapScaled;
+        final MediaDetails mediaDetails = mediaDetailseslist.get(position);
         holder.txtTotalComment.setText(mediaDetails.getTotlaNoOfComment());
         holder.txtTotalLike.setText(mediaDetails.getTotalLike());
         holder.txtDescrption.setText(mediaDetails.getPostDescription());
-        Bitmap bitmap = mLruCache.get(mediaDetails.getMediaUrl());
+
         Picasso.with(mContext).load(mediaDetails.getUserProfilePic()).into(holder.profilePic);
         holder.txtUserName.setText(mediaDetails.getUserName());
         //holder.txtPostDate.setText(mediaDetails.getCraetedTime().substring(0, mediaDetails.getCraetedTime().indexOf(",")));
         holder.txtPostDate.setText(mediaDetails.getDateDiff() + "");
 
+        
+
+        holder.likeImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                holder.likeImageView.setImageResource(R.drawable.likefilled);
+                String url = "  https://api.instagram.com/v1/media/" + mediaDetails.getMediaId() + "/likes";
+                new PostCommentAsyncTask("", false).execute(url);
+                int count = Integer.parseInt(mediaDetails.getTotalLike()) + 1;
+                holder.txtTotalLike.setText(String.valueOf(count));
+            }
+        });
+
+        commentOnFeed(holder, mediaDetails, position);
+        setImageOfFeed(holder, mediaDetails);
+
+
+        holder.viewGroup.removeAllViews();
+        //new RequestForCommentAsyncTask(holder.viewGroup, mContext, mCommentCount).execute(mediaDetails.getMediaId());
+        ArrayList<CommentDetails> arrayListComment = mediaDetailseslist.get(position).getCommentDetailsArrayList();
+        for (CommentDetails commentDetails : arrayListComment) {
+            TextView textViewComment = new TextView(mContext);
+            textViewComment.append(mUserName + ":-" + commentDetails.getComment());
+            holder.viewGroup.addView(textViewComment);
+        }
+
+    }
+
+    private void setImageOfFeed(ViewHolder holder, MediaDetails mediaDetails) {
+        Bitmap bMapScaled;
+        Bitmap bitmap = mLruCache.get(mediaDetails.getMediaUrl());
         DisplayMetrics displayMetrics = new DisplayMetrics();
         WindowManager wm = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
         wm.getDefaultDisplay().getMetrics(displayMetrics);
@@ -105,27 +139,41 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
             int currentOrientation = mContext.getResources().getConfiguration().orientation;
             if (currentOrientation == Configuration.ORIENTATION_LANDSCAPE) {
                 bMapScaled = Bitmap.createScaledBitmap(bitmap, screenWidth, screenHeight, true);
-                holder.postImage.setImageBitmap(bMapScaled);
             } else {
                 bMapScaled = Bitmap.createScaledBitmap(bitmap, screenWidth, 400, true);
-                holder.postImage.setImageBitmap(bMapScaled);
             }
-
+            holder.postImage.setImageBitmap(bMapScaled);
         } else {
             new ImageDownloader(holder.postImage, this, mContext).execute(mediaDetails.getMediaUrl());
         }
-
-
-        holder.viewGroup.removeAllViews();
-        //new RequestForCommentAsyncTask(holder.viewGroup, mContext, mCommentCount).execute(mediaDetails.getMediaId());
-        ArrayList<CommentDetails> arrayListComment = mediaDetailseslist.get(position).getCommentDetailsArrayList();
-        for (CommentDetails commentDetails : arrayListComment) {
-            TextView textViewComment = new TextView(mContext);
-            textViewComment.append(commentDetails.getCommentedBy() + ":-" + commentDetails.getComment());
-            holder.viewGroup.addView(textViewComment);
-        }
-
     }
+
+
+    private void commentOnFeed(final ViewHolder holder, final MediaDetails mediaDetails, final int position) {
+        holder.sendImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String comt = holder.editText.getText().toString();
+                if (comt.trim().length() != 0 && Util.isNwConnected(mContext)) {
+                    TextView textViewComment = new TextView(mContext);
+                    textViewComment.append(mUserName + ":-" + comt);
+                    holder.viewGroup.addView(textViewComment, 0);
+                    new PostCommentAsyncTask(comt, true).execute(AppData.APIURL + "/media/" + mediaDetailseslist.get(position).getMediaId() + "/comments");
+                    holder.editText.setText("");
+                    int count = Integer.parseInt(mediaDetails.getTotlaNoOfComment()) + 1;
+                    holder.txtTotalComment.setText(count + "");
+                    ArrayList<CommentDetails> tempArrayList = new ArrayList<>();
+                    CommentDetails commentDetails = new CommentDetails();
+                    commentDetails.setCommentedBy(mediaDetails.getUserName());
+                    commentDetails.setComment(comt);
+                    mediaDetailseslist.get(position).getCommentDetailsArrayList().add(commentDetails);
+                    mediaDetails.setTotlaNoOfComment(count + "");
+                    notifyItemChanged(position);
+                }
+            }
+        });
+    }
+
 
     @Override
     public int getItemCount() {
@@ -149,6 +197,8 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
         private ImageView profilePic;
         private TextView txtPostDate;
         private TextView txtUserName;
+        private TextView txtLike;
+        private ImageView likeImageView;
 
         public ViewHolder(View itemView) {
             super(itemView);
@@ -162,19 +212,8 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
             profilePic = (ImageView) itemView.findViewById(R.id.userimage);
             txtUserName = (TextView) itemView.findViewById(R.id.txtusername);
             txtPostDate = (TextView) itemView.findViewById(R.id.postdate);
-            sendImage.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    String comt = editText.getText().toString();
-                    if (comt.trim().length() != 0 && Util.isNwConnected(mContext)) {
-                        TextView textViewComment = new TextView(mContext);
-                        textViewComment.append(mUserName + ":-" + comt);
-                        viewGroup.addView(textViewComment, 0);
-                        new PostCommentAsyncTask(comt).execute(AppData.APIURL + "/media/" + mediaDetailseslist.get(getAdapterPosition()).getMediaId() + "/comments");
-                        editText.setText("");
-                    }
-                }
-            });
+            likeImageView= (ImageView) itemView.findViewById(R.id.likeIcon);
+            //txtLike = (TextView) itemView.findViewById(R.id.like);
         }
     }
 

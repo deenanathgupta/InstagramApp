@@ -4,4 +4,5 @@
     <dimen name="circularimagepaddingleft">20dp</dimen>
     <dimen name="margin">4dp</dimen>
     <dimen name="circularimagemarginstart">29dp</dimen>
+    <dimen name="sendImageTopMargin">20dp</dimen>
 </resources>

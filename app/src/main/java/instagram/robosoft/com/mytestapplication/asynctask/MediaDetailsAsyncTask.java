@@ -134,7 +134,7 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Util> {
                     String createdTime = jsonObject1.getString("created_time");
                     postDateOfFeed(createdTime);
                     String imageurl = jsonObject1.getJSONObject("images").getJSONObject("standard_resolution").getString("url");
-                    Log.i("test", "iMage Url: " + imageurl);
+                    //Log.i("test", "iMage Url: " + imageurl);
                     String liked = jsonObject1.getJSONObject("likes").getString("count");
                     String caption, totalComment, mediaidd;
                     if (!jsonObject1.isNull("caption")) {
@@ -176,13 +176,14 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Util> {
         long diffInDays = (diff) / (1000 * 60 * 60 * 24);
 
         if (diffInDays >= 1) {
-            mediaDetails.setDateDiff(diffInDays + "d");
-            if (diffInDays >= 30 && diffInDays < 365)
+            if (diffInDays >= 1 && diffInDays < 7)
+                mediaDetails.setDateDiff(diffInDays + "d");
+            else if (diffInDays >= 30 && diffInDays < 365)
                 mediaDetails.setDateDiff((diffInDays / 30) + "M");
             else if (diffInDays < 30 && diffInDays >= 7)
-                mediaDetails.setDateDiff((diffInDays % 7) + "w");
+                mediaDetails.setDateDiff((diffInDays / 7) + "w");
             else if (diffInDays >= 365)
-                mediaDetails.setDateDiff((diffInDays % 365) + "y");
+                mediaDetails.setDateDiff((diffInDays / 365) + "y");
         } else if (diffHours >= 1 && diffHours <= 24) {
             mediaDetails.setDateDiff(diffHours + "h");
         } else if (diffMinutes <= 60 && diffMinutes >= 1) {

@@ -31,7 +31,7 @@ public class GetAccessToken extends AsyncTask<String, Void, String[]> {
     private String mAccessTokenString;
     private String token = null;
     private String username = null;
-    private String mUserDetails[] = new String[2];
+    private String mUserDetails[] = new String[3];
     private String mUserprofilePic = null;
     private CallBack mCallBack;
     private SharedPreferences mSharedpreferences;
@@ -70,6 +70,7 @@ public class GetAccessToken extends AsyncTask<String, Void, String[]> {
             mUserprofilePic = jsonObject.getJSONObject("user").getString("profile_picture");
             mUserDetails[0] = username;
             mUserDetails[1] = mUserprofilePic;
+            mUserDetails[2] = id;
 
             editor.putString(AppData.accesstoken, mAccessTokenString);
             editor.apply();
