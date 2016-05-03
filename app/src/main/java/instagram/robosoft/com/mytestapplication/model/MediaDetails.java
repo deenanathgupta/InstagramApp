@@ -19,6 +19,7 @@ public class MediaDetails implements Parcelable {
     private String createdTime;
     private ArrayList<CommentDetails> commentDetailsArrayList;
     private String dateDiff;
+    private Boolean user_has_liked;
 
     public MediaDetails(Parcel in) {
         mediaUrl = in.readString();
@@ -46,6 +47,14 @@ public class MediaDetails implements Parcelable {
             return new MediaDetails[size];
         }
     };
+
+    public Boolean getUser_has_liked() {
+        return user_has_liked;
+    }
+
+    public void setUser_has_liked(Boolean user_has_liked) {
+        this.user_has_liked = user_has_liked;
+    }
 
     public String getDateDiff() {
         return dateDiff;

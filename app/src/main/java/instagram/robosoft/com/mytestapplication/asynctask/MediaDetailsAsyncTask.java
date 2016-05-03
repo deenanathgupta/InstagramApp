@@ -130,6 +130,9 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Util> {
                 JSONObject jsonObject1;
                 try {
                     jsonObject1 = data.getJSONObject(i);
+                    Boolean user_has_liked = jsonObject1.getBoolean("user_has_liked");
+                    //Log.i("test", "" + user_has_liked);
+                    mediaDetails.setUser_has_liked(user_has_liked);
                     //get the media post date
                     String createdTime = jsonObject1.getString("created_time");
                     postDateOfFeed(createdTime);
@@ -148,6 +151,7 @@ public class MediaDetailsAsyncTask extends AsyncTask<String, Void, Util> {
                     String profile_picture = jsonObject1.getJSONObject("user").getString("profile_picture");
                     String username = jsonObject1.getJSONObject("user").getString("username");
                     mediaidd = jsonObject1.getString("id");
+
                     mediaId[i] = mediaidd;
                     mediaDetails.setMediaUrl(imageurl);
                     mediaDetails.setTotalLike(liked);

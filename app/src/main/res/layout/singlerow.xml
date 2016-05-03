@@ -84,7 +84,6 @@
                 android:orientation="horizontal"
                 android:weightSum="6">
 
-
                 <ImageView
                     android:id="@+id/likeIcon"
                     android:layout_width="wrap_content"

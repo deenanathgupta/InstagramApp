@@ -9,6 +9,7 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.RecyclerView;
+import android.text.Html;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.LruCache;
@@ -99,16 +100,32 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
         //holder.txtPostDate.setText(mediaDetails.getCraetedTime().substring(0, mediaDetails.getCraetedTime().indexOf(",")));
         holder.txtPostDate.setText(mediaDetails.getDateDiff() + "");
 
-        
-
+        if (mediaDetails.getUser_has_liked()) {
+            holder.likeImageView.setImageResource(R.drawable.likefilled);
+        } else {
+            holder.likeImageView.setImageResource(R.drawable.like50);
+        }
         holder.likeImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                holder.likeImageView.setImageResource(R.drawable.likefilled);
-                String url = "  https://api.instagram.com/v1/media/" + mediaDetails.getMediaId() + "/likes";
-                new PostCommentAsyncTask("", false).execute(url);
-                int count = Integer.parseInt(mediaDetails.getTotalLike()) + 1;
-                holder.txtTotalLike.setText(String.valueOf(count));
+                int count;
+                if (mediaDetails.getUser_has_liked()) {
+                    mediaDetails.setUser_has_liked(false);
+                    holder.likeImageView.setImageResource(R.drawable.like50);
+                    String url = "https://api.instagram.com/v1/media/" + mediaDetails.getMediaId() + "/likes?access_token=" + AppData.accesstokn;
+                    new PostCommentAsyncTask("", 3).execute(url);
+                    count = Integer.parseInt(mediaDetails.getTotalLike()) - 1;
+                    holder.txtTotalLike.setText(String.valueOf(count));
+                } else {
+                    holder.likeImageView.setImageResource(R.drawable.likefilled);
+                    String url = "https://api.instagram.com/v1/media/" + mediaDetails.getMediaId() + "/likes";
+                    new PostCommentAsyncTask("", 2).execute(url);
+                    count = Integer.parseInt(mediaDetails.getTotalLike()) + 1;
+                    holder.txtTotalLike.setText(String.valueOf(count));
+                    mediaDetails.setUser_has_liked(true);
+                }
+                mediaDetails.setTotalLike(String.valueOf(count));
+                notifyDataSetChanged();
             }
         });
 
@@ -121,7 +138,7 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
         ArrayList<CommentDetails> arrayListComment = mediaDetailseslist.get(position).getCommentDetailsArrayList();
         for (CommentDetails commentDetails : arrayListComment) {
             TextView textViewComment = new TextView(mContext);
-            textViewComment.append(mUserName + ":-" + commentDetails.getComment());
+            textViewComment.setText(Html.fromHtml("<b><font color =\"#6495ED\">" + commentDetails.getCommentedBy() + "</b>" + "  " + "<small>" + commentDetails.getComment() + "</small>"));
             holder.viewGroup.addView(textViewComment);
         }
 
@@ -156,9 +173,9 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
                 String comt = holder.editText.getText().toString();
                 if (comt.trim().length() != 0 && Util.isNwConnected(mContext)) {
                     TextView textViewComment = new TextView(mContext);
-                    textViewComment.append(mUserName + ":-" + comt);
+                    textViewComment.setText(Html.fromHtml("<b><font color =\"#6495ED\">" + mUserName + "</b>" + "  " + "<small>" + comt + "</small>"));
                     holder.viewGroup.addView(textViewComment, 0);
-                    new PostCommentAsyncTask(comt, true).execute(AppData.APIURL + "/media/" + mediaDetailseslist.get(position).getMediaId() + "/comments");
+                    new PostCommentAsyncTask(comt, 1).execute(AppData.APIURL + "/media/" + mediaDetailseslist.get(position).getMediaId() + "/comments");
                     holder.editText.setText("");
                     int count = Integer.parseInt(mediaDetails.getTotlaNoOfComment()) + 1;
                     holder.txtTotalComment.setText(count + "");
@@ -212,7 +229,7 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
             profilePic = (ImageView) itemView.findViewById(R.id.userimage);
             txtUserName = (TextView) itemView.findViewById(R.id.txtusername);
             txtPostDate = (TextView) itemView.findViewById(R.id.postdate);
-            likeImageView= (ImageView) itemView.findViewById(R.id.likeIcon);
+            likeImageView = (ImageView) itemView.findViewById(R.id.likeIcon);
             //txtLike = (TextView) itemView.findViewById(R.id.like);
         }
     }

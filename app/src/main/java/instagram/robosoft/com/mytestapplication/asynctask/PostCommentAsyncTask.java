@@ -17,34 +17,48 @@ import instagram.robosoft.com.mytestapplication.constant.AppData;
  * Created by deena on 29/2/16.
  */
 public class PostCommentAsyncTask extends AsyncTask<String, Void, Void> {
-    HttpURLConnection mHttpURLConnection = null;
+    private HttpURLConnection mHttpURLConnection = null;
     private String mCommentText;
-    private Boolean mFlag = false;
+    private int flag = 0;
 
-    public PostCommentAsyncTask(String mCommentText, Boolean mFlag) {
+    public PostCommentAsyncTask(String mCommentText, int mFlag) {
         this.mCommentText = mCommentText;
-        this.mFlag = mFlag;
+        this.flag = mFlag;
     }
 
     @Override
     protected Void doInBackground(String... params) {
         try {
             URL url = new URL(params[0]);
-            Log.i("URL", "CommentUrl:" + url);
             mHttpURLConnection = (HttpURLConnection) url.openConnection();
-            mHttpURLConnection.setRequestMethod("POST");
-            mHttpURLConnection.setDoOutput(true);
-            mHttpURLConnection.connect();
+            Log.i("URL", "CommentUrl:" + url);
+            if (flag != 3) {
+                mHttpURLConnection.setRequestMethod("POST");
+                mHttpURLConnection.setDoOutput(true);
+                mHttpURLConnection.connect();
 
-            OutputStream os = mHttpURLConnection.getOutputStream();
-            BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
-            if (mFlag)
-                bufferedWriter.write("&access_token=" + AppData.accesstokn + "&text=" + mCommentText);
-            else
-                bufferedWriter.write("&access_token=" + AppData.accesstokn + "&likes");
-            bufferedWriter.flush();
-            bufferedWriter.close();
-            os.close();
+                OutputStream os = mHttpURLConnection.getOutputStream();
+                BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+                if (flag == 1)
+                    bufferedWriter.write("&access_token=" + AppData.accesstokn + "&text=" + mCommentText);
+                else if (flag == 2)
+                    bufferedWriter.write("&access_token=" + AppData.accesstokn + "&likes");
+
+                bufferedWriter.flush();
+                bufferedWriter.close();
+                os.close();
+            } else {
+                Log.i("test","Elseeeee");
+                mHttpURLConnection.setRequestMethod("DELETE");
+                mHttpURLConnection.setDoOutput(true);
+                mHttpURLConnection.connect();
+                OutputStream os = mHttpURLConnection.getOutputStream();
+                BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+                bufferedWriter.write("&access_token=" + AppData.accesstokn);
+                bufferedWriter.flush();
+                bufferedWriter.close();
+                os.close();
+            }
             int responseCode = mHttpURLConnection.getResponseCode();
             if (responseCode == mHttpURLConnection.HTTP_OK) {
                 Log.i("Success", "CommentPosted" + responseCode);
