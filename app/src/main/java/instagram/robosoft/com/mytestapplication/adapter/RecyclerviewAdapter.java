@@ -1,17 +1,11 @@
 package instagram.robosoft.com.mytestapplication.adapter;
 
 import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
-import android.support.design.widget.Snackbar;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,31 +14,14 @@ import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Target;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONTokener;
-
-import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.InterfaceAddress;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
 
-import instagram.robosoft.com.mytestapplication.MainActivity;
 import instagram.robosoft.com.mytestapplication.R;
-import instagram.robosoft.com.mytestapplication.asynctask.PostCommentAsyncTask;
-import instagram.robosoft.com.mytestapplication.asynctask.RequestForCommentAsyncTask;
+import instagram.robosoft.com.mytestapplication.asynctask.CommentAndLikeAsyncTask;
 import instagram.robosoft.com.mytestapplication.communicator.ImageAsyncCallBack;
 import instagram.robosoft.com.mytestapplication.constant.AppData;
 import instagram.robosoft.com.mytestapplication.model.CommentDetails;
@@ -59,7 +36,6 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
     private LruCache<String, Bitmap> mLruCache;
     private Context mContext;
     private String mUserName = null;
-    private int mCommentCount;
     private View mView;
     private ViewHolder mViewHolder;
     HttpURLConnection httpURLConnection;
@@ -69,8 +45,6 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
         this.mediaDetailseslist = mMediaDetailsMap;
         this.mUserName = Username;
         this.mContext = mContext;
-        this.mCommentCount = commentCount;
-
         final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
         final int cacheSize = maxMemory / 8;
         mLruCache = new LruCache<>(cacheSize);
@@ -92,7 +66,7 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
         mViewHolder = holder;
         final MediaDetails mediaDetails = mediaDetailseslist.get(position);
         holder.txtTotalComment.setText(mediaDetails.getTotlaNoOfComment());
-        holder.txtTotalLike.setText(mediaDetails.getTotalLike());
+        holder.txtTotalLike.setText(mediaDetails.getTotalLike() + R.string.like);
         holder.txtDescrption.setText(mediaDetails.getPostDescription());
 
         Picasso.with(mContext).load(mediaDetails.getUserProfilePic()).into(holder.profilePic);
@@ -105,31 +79,11 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
         } else {
             holder.likeImageView.setImageResource(R.drawable.like50);
         }
-        holder.likeImageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int count;
-                if (mediaDetails.getUser_has_liked()) {
-                    mediaDetails.setUser_has_liked(false);
-                    holder.likeImageView.setImageResource(R.drawable.like50);
-                    String url = "https://api.instagram.com/v1/media/" + mediaDetails.getMediaId() + "/likes?access_token=" + AppData.accesstokn;
-                    new PostCommentAsyncTask("", 3).execute(url);
-                    count = Integer.parseInt(mediaDetails.getTotalLike()) - 1;
-                    holder.txtTotalLike.setText(String.valueOf(count));
-                } else {
-                    holder.likeImageView.setImageResource(R.drawable.likefilled);
-                    String url = "https://api.instagram.com/v1/media/" + mediaDetails.getMediaId() + "/likes";
-                    new PostCommentAsyncTask("", 2).execute(url);
-                    count = Integer.parseInt(mediaDetails.getTotalLike()) + 1;
-                    holder.txtTotalLike.setText(String.valueOf(count));
-                    mediaDetails.setUser_has_liked(true);
-                }
-                mediaDetails.setTotalLike(String.valueOf(count));
-                notifyDataSetChanged();
-            }
-        });
-
+        //the like image will change after click on like image
+        changeImageOfLike(holder, mediaDetails);
+        //comment on feed and update the total number of comment on ui
         commentOnFeed(holder, mediaDetails, position);
+        //set image of feed
         setImageOfFeed(holder, mediaDetails);
 
 
@@ -138,11 +92,38 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
         ArrayList<CommentDetails> arrayListComment = mediaDetailseslist.get(position).getCommentDetailsArrayList();
         for (CommentDetails commentDetails : arrayListComment) {
             TextView textViewComment = new TextView(mContext);
+
             textViewComment.setText(Html.fromHtml("<b><font color =\"#6495ED\">" + commentDetails.getCommentedBy() + "</b>" + "  " + "<small>" + commentDetails.getComment() + "</small>"));
             holder.viewGroup.addView(textViewComment);
         }
 
     }
+
+    private void changeImageOfLike(final ViewHolder holder, final MediaDetails mediaDetails) {
+        holder.likeImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int count;
+                if (mediaDetails.getUser_has_liked()) {
+                    mediaDetails.setUser_has_liked(false);
+                    holder.likeImageView.setImageResource(R.drawable.like50);
+                    String url = AppData.APIURL + "/media/" + mediaDetails.getMediaId() + "/likes?access_token=" + AppData.accesstokn;
+                    new CommentAndLikeAsyncTask("", 3).execute(url);
+                    count = Integer.parseInt(mediaDetails.getTotalLike()) - 1;
+                } else {
+                    holder.likeImageView.setImageResource(R.drawable.likefilled);
+                    String url = AppData.APIURL + "/media/" + mediaDetails.getMediaId() + "/likes";
+                    new CommentAndLikeAsyncTask("", 2).execute(url);
+                    count = Integer.parseInt(mediaDetails.getTotalLike()) + 1;
+                    mediaDetails.setUser_has_liked(true);
+                }
+                holder.txtTotalLike.setText(String.valueOf(count) +  R.string.like);
+                mediaDetails.setTotalLike(String.valueOf(count));
+                notifyDataSetChanged();
+            }
+        });
+    }
+
 
     private void setImageOfFeed(ViewHolder holder, MediaDetails mediaDetails) {
         Bitmap bMapScaled;
@@ -175,11 +156,10 @@ public class RecyclerviewAdapter extends RecyclerView.Adapter<RecyclerviewAdapte
                     TextView textViewComment = new TextView(mContext);
                     textViewComment.setText(Html.fromHtml("<b><font color =\"#6495ED\">" + mUserName + "</b>" + "  " + "<small>" + comt + "</small>"));
                     holder.viewGroup.addView(textViewComment, 0);
-                    new PostCommentAsyncTask(comt, 1).execute(AppData.APIURL + "/media/" + mediaDetailseslist.get(position).getMediaId() + "/comments");
+                    new CommentAndLikeAsyncTask(comt, 1).execute(AppData.APIURL + "/media/" + mediaDetailseslist.get(position).getMediaId() + "/comments");
                     holder.editText.setText("");
                     int count = Integer.parseInt(mediaDetails.getTotlaNoOfComment()) + 1;
                     holder.txtTotalComment.setText(count + "");
-                    ArrayList<CommentDetails> tempArrayList = new ArrayList<>();
                     CommentDetails commentDetails = new CommentDetails();
                     commentDetails.setCommentedBy(mediaDetails.getUserName());
                     commentDetails.setComment(comt);

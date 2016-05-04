@@ -12,4 +12,5 @@
     <string name="alertMessage">Enter a value For comment to show</string>
     <string name="snackBarMessageForEditText">Please enter valid number</string>
     <string name="loadmore">Loading...</string>
+    <string name="like">likes</string>
 </resources>

@@ -2,6 +2,7 @@ package instagram.robosoft.com.mytestapplication.asynctask;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -18,6 +19,8 @@ import java.net.URL;
 import java.util.ArrayList;
 
 import instagram.robosoft.com.mytestapplication.UserProfile;
+import instagram.robosoft.com.mytestapplication.communicator.UserDetailsDataCallback;
+import instagram.robosoft.com.mytestapplication.constant.AppData;
 import instagram.robosoft.com.mytestapplication.utils.Util;
 
 /**
@@ -27,12 +30,15 @@ public class UserDetailAsyncTask extends AsyncTask<String, Void, Void> {
     HttpURLConnection mHttpURLConnection = null;
     private Context mContext;
     private ArrayList<String> mUserDetailsArrayList;
-    Util util;
-    URL mUrl;
+    private URL mUrl;
+    private SharedPreferences mSharedPreferences;
+    private UserDetailsDataCallback mUserDetailsDataCallback;
 
     public UserDetailAsyncTask(Context mContext) {
         this.mContext = mContext;
+        mUserDetailsDataCallback = (UserDetailsDataCallback) mContext;
         mUserDetailsArrayList = new ArrayList<>();
+        mSharedPreferences = mContext.getSharedPreferences(AppData.USER_PROFILE_DETAILS, Context.MODE_PRIVATE);
     }
 
     @Override
@@ -46,7 +52,6 @@ public class UserDetailAsyncTask extends AsyncTask<String, Void, Void> {
             mUrl = new URL(params[0]);
             mHttpURLConnection = (HttpURLConnection) mUrl.openConnection();
             String respose = String.valueOf(Util.covertInputStreamToString(mHttpURLConnection.getInputStream()));
-            Log.i("test", "RES " + respose);
             JSONObject jsonObject = (JSONObject) new JSONTokener(respose).nextValue();
             JSONObject dataJsonObject = jsonObject.getJSONObject("data");
             String userName = dataJsonObject.getString("username");
@@ -63,7 +68,13 @@ public class UserDetailAsyncTask extends AsyncTask<String, Void, Void> {
             mUserDetailsArrayList.add(String.valueOf(followed_by));
             mUserDetailsArrayList.add(String.valueOf(follows));
             mUserDetailsArrayList.add(userName);
-            Log.d("test", "Size of ArrayaUserDetails+++" + mUserDetailsArrayList.size());
+            SharedPreferences.Editor editor = mSharedPreferences.edit();
+            editor.putString(AppData.USER_NAME, fullName);
+            editor.putString(AppData.USER_PROFILE_PIC, profilePic);
+            editor.putString(AppData.POSTED_MEDIA, String.valueOf(media));
+            editor.putString(AppData.FOLLOWED_BY, String.valueOf(followed_by));
+            editor.putString(AppData.FOLLOWERS, String.valueOf(follows));
+            editor.apply();
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -77,9 +88,6 @@ public class UserDetailAsyncTask extends AsyncTask<String, Void, Void> {
     @Override
     protected void onPostExecute(Void aVoid) {
         super.onPostExecute(aVoid);
-        Bundle bundle = new Bundle();
-        Intent intent = new Intent(mContext, UserProfile.class);
-        intent.putExtras(bundle);
-        mContext.startActivity(intent);
+        mUserDetailsDataCallback.userProfileData(mUserDetailsArrayList);
     }
 }

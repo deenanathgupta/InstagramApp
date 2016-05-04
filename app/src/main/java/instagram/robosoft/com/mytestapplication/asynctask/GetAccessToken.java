@@ -39,7 +39,7 @@ public class GetAccessToken extends AsyncTask<String, Void, String[]> {
     public GetAccessToken(String token, Context context) {
         this.token = token.trim();
         mCallBack = (CallBack) context;
-        mSharedpreferences = context.getSharedPreferences(AppData.MYPREFERENCE, context.MODE_PRIVATE);
+        mSharedpreferences = context.getSharedPreferences(AppData.MYPREFERENCE, Context.MODE_PRIVATE);
 
     }
 
@@ -74,6 +74,7 @@ public class GetAccessToken extends AsyncTask<String, Void, String[]> {
 
             editor.putString(AppData.accesstoken, mAccessTokenString);
             editor.apply();
+            outputStreamWriter.close();
 
         } catch (MalformedURLException e) {
             e.printStackTrace();

@@ -40,12 +40,13 @@ import instagram.robosoft.com.mytestapplication.asynctask.UserDetailAsyncTask;
 import instagram.robosoft.com.mytestapplication.communicator.CallBack;
 import instagram.robosoft.com.mytestapplication.communicator.CommentDetailsCallBack;
 import instagram.robosoft.com.mytestapplication.communicator.MediaDetailsDataCommunicatior;
+import instagram.robosoft.com.mytestapplication.communicator.UserDetailsDataCallback;
 import instagram.robosoft.com.mytestapplication.constant.AppData;
 import instagram.robosoft.com.mytestapplication.model.CommentDetails;
 import instagram.robosoft.com.mytestapplication.model.MediaDetails;
 import instagram.robosoft.com.mytestapplication.utils.Util;
 
-public class MainActivity extends AppCompatActivity implements CallBack, MediaDetailsDataCommunicatior, CommentDetailsCallBack, View.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
+public class MainActivity extends AppCompatActivity implements CallBack, MediaDetailsDataCommunicatior, CommentDetailsCallBack, View.OnClickListener, SwipeRefreshLayout.OnRefreshListener, UserDetailsDataCallback {
 
     private RecyclerView mRecyclerView;
     private SharedPreferences mSharedPreferences;
@@ -68,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     private Boolean mFlag = false;
     private ProgressDialog mProgressDialog;
     private String mUserDetail[];
+    private ArrayList<String> mUserProfileDetail;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -254,24 +256,16 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.profile:
-                profileActictivity();
-                new UserDetailAsyncTask(this).execute("https://api.instagram.com/v1/users/" + mUserDetail[2] + "/?access_token=" + AppData.accesstokn);
+                if (Util.isNwConnected(this))
+                    new UserDetailAsyncTask(this).execute(AppData.APIURL + "/users/" + mUserDetail[2] + "/?access_token=" + AppData.accesstokn);
+                else
+                    startActivity(new Intent(MainActivity.this, UserProfile.class));
                 break;
             case R.id.setting:
                 settingForComment();
                 break;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    private void profileActictivity() {
-        Intent intent = new Intent(MainActivity.this, UserProfile.class);
-        Bundle bundle = new Bundle();
-        bundle.putStringArray(AppData.USERDETAILS, mUserdetails);
-        //bundle.putParcelableArrayList(AppData.USER_COMMENT_DETAILS, mMediaDetailseslist);
-        intent.putExtras(bundle);
-        startActivity(intent);
-        overridePendingTransition(R.anim.right_in, R.anim.left_out);
     }
 
     private void settingForComment() {
@@ -292,7 +286,8 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
                 if (input.trim().length() != 0) {
                     editor.putString(AppData.SettingKey, input);
                     editor.commit();
-                    new RequestForCommentAsyncTask(mMediaDetailseslist, MainActivity.this).execute();
+                    if (Util.isNwConnected(MainActivity.this))
+                        new RequestForCommentAsyncTask(mMediaDetailseslist, MainActivity.this).execute();
                 } else {
                     Snackbar.make(mCoordinatorLayout, R.string.snackBarMessageForEditText, Snackbar.LENGTH_LONG).show();
                 }
@@ -344,6 +339,15 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
         return mUtil;
     }
 
+    @Override
+    public void userProfileData(ArrayList<String> userProfileArrayList) {
+        mUserProfileDetail = userProfileArrayList;
+        Bundle bundle = new Bundle();
+        bundle.putStringArrayList(AppData.UserDetailKeyBundle, mUserProfileDetail);
+        Intent intent = new Intent(MainActivity.this, UserProfile.class);
+        intent.putExtras(bundle);
+        startActivity(intent);
+    }
 }
 
 

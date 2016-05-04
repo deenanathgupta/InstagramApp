@@ -39,4 +39,10 @@ public class AppData {
 
     public static final String defaultNoOfComment = "5";
     public static final String USER_PROFILE_DETAILS = "userProfileInfo";
+    public static final String USER_NAME = "username";
+    public static final String USER_PROFILE_PIC = "profilepic";
+    public static final String FOLLOWERS = "followers";
+    public static final String FOLLOWED_BY = "followedby";
+    public static final String POSTED_MEDIA = "postedmedia";
+    public static final String UserDetailKeyBundle="bundlekey";
 }

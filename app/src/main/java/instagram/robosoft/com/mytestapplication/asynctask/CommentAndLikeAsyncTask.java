@@ -16,12 +16,12 @@ import instagram.robosoft.com.mytestapplication.constant.AppData;
 /**
  * Created by deena on 29/2/16.
  */
-public class PostCommentAsyncTask extends AsyncTask<String, Void, Void> {
+public class CommentAndLikeAsyncTask extends AsyncTask<String, Void, Void> {
     private HttpURLConnection mHttpURLConnection = null;
     private String mCommentText;
     private int flag = 0;
 
-    public PostCommentAsyncTask(String mCommentText, int mFlag) {
+    public CommentAndLikeAsyncTask(String mCommentText, int mFlag) {
         this.mCommentText = mCommentText;
         this.flag = mFlag;
     }
@@ -48,7 +48,6 @@ public class PostCommentAsyncTask extends AsyncTask<String, Void, Void> {
                 bufferedWriter.close();
                 os.close();
             } else {
-                Log.i("test","Elseeeee");
                 mHttpURLConnection.setRequestMethod("DELETE");
                 mHttpURLConnection.setDoOutput(true);
                 mHttpURLConnection.connect();
@@ -60,7 +59,7 @@ public class PostCommentAsyncTask extends AsyncTask<String, Void, Void> {
                 os.close();
             }
             int responseCode = mHttpURLConnection.getResponseCode();
-            if (responseCode == mHttpURLConnection.HTTP_OK) {
+            if (responseCode == HttpURLConnection.HTTP_OK) {
                 Log.i("Success", "CommentPosted" + responseCode);
             } else {
                 Log.i("Failed", "CommentFailed" + responseCode);
