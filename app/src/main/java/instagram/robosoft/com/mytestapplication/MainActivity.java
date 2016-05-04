@@ -28,54 +28,47 @@ import android.view.inputmethod.InputMethodManager;
 import android.webkit.WebView;
 import android.widget.AbsListView;
 import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 
 import java.util.ArrayList;
 
 import instagram.robosoft.com.mytestapplication.adapter.RecyclerviewAdapter;
 import instagram.robosoft.com.mytestapplication.asynctask.MediaDetailsAsyncTask;
 import instagram.robosoft.com.mytestapplication.asynctask.RequestForCommentAsyncTask;
-import instagram.robosoft.com.mytestapplication.asynctask.UserDetailAsyncTask;
 import instagram.robosoft.com.mytestapplication.communicator.CallBack;
 import instagram.robosoft.com.mytestapplication.communicator.CommentDetailsCallBack;
 import instagram.robosoft.com.mytestapplication.communicator.MediaDetailsDataCommunicatior;
-import instagram.robosoft.com.mytestapplication.communicator.UserDetailsDataCallback;
 import instagram.robosoft.com.mytestapplication.constant.AppData;
 import instagram.robosoft.com.mytestapplication.model.CommentDetails;
 import instagram.robosoft.com.mytestapplication.model.MediaDetails;
 import instagram.robosoft.com.mytestapplication.utils.Util;
 
-public class MainActivity extends AppCompatActivity implements CallBack, MediaDetailsDataCommunicatior, CommentDetailsCallBack, View.OnClickListener, SwipeRefreshLayout.OnRefreshListener, UserDetailsDataCallback {
+public class MainActivity extends AppCompatActivity implements CallBack, MediaDetailsDataCommunicatior, CommentDetailsCallBack, View.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
 
     private RecyclerView mRecyclerView;
+    private RecyclerviewAdapter mRecyclerviewAdapter;
     private SharedPreferences mSharedPreferences;
     private WebView webView;
     private AlertDialog.Builder mAlertBuilder;
-    private RecyclerviewAdapter mRecyclerviewAdapter;
     private FloatingActionButton mFloatingActionButton;
     private CoordinatorLayout mCoordinatorLayout;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+    private LinearLayoutManager mLinearLayoutManager;
+    private ProgressDialog mProgressDialog;
     private int mCommentCountDisplay = 0;
     private String[] mUserdetails;
     private ArrayList<MediaDetails> mMediaDetailseslist = new ArrayList<>();
-    private SwipeRefreshLayout mSwipeRefreshLayout;
-    private LinearLayoutManager mLinearLayoutManager;
     private Util mUtil;
     private ArrayList<String> nextUrlArrayList;
     // Variables for scroll listener
     private boolean mUserScrolled = true;
     private int mPastVisiblesItems, mVisibleItemCount, mTotalItemCount;
-    private int currentOrientation;
     private Boolean mFlag = false;
-    private ProgressDialog mProgressDialog;
     private String mUserDetail[];
-    private ArrayList<String> mUserProfileDetail;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        currentOrientation = getResources().getConfiguration().orientation;
         initializeView();
         if (savedInstanceState == null) {
             if (Util.isNwConnected(this)) {
@@ -256,10 +249,9 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.profile:
-                if (Util.isNwConnected(this))
-                    new UserDetailAsyncTask(this).execute(AppData.APIURL + "/users/" + mUserDetail[2] + "/?access_token=" + AppData.accesstokn);
-                else
-                    startActivity(new Intent(MainActivity.this, UserProfile.class));
+                Intent intent = new Intent(MainActivity.this, UserProfile.class);
+                intent.putExtra("userId", mUserDetail[2]);
+                startActivity(intent);
                 break;
             case R.id.setting:
                 settingForComment();
@@ -339,15 +331,7 @@ public class MainActivity extends AppCompatActivity implements CallBack, MediaDe
         return mUtil;
     }
 
-    @Override
-    public void userProfileData(ArrayList<String> userProfileArrayList) {
-        mUserProfileDetail = userProfileArrayList;
-        Bundle bundle = new Bundle();
-        bundle.putStringArrayList(AppData.UserDetailKeyBundle, mUserProfileDetail);
-        Intent intent = new Intent(MainActivity.this, UserProfile.class);
-        intent.putExtras(bundle);
-        startActivity(intent);
-    }
+
 }
 
 
